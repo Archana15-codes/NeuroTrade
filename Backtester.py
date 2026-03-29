@@ -1013,3 +1013,11 @@ def run_full_analysis(df: pd.DataFrame,
         results['equity_curve']['equity'],
         df, config.initial_capital, config.risk_free_rate
     )
+
+    mc_results = None
+    if run_monte_carlo and results['trades']:
+        print(f">> Running Monte Carlo ({10_000} simulations)...")
+        mc = MonteCarloSimulator(n_simulations=10_000)
+        mc_results = mc.run(results['trades'], config.initial_capital)
+
+    wf_results = None
