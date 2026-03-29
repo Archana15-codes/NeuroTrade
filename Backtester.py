@@ -154,3 +154,22 @@ class RiskAnalytics:
     def ulcer_index(equity: pd.Series) -> float:
         dd = RiskAnalytics.drawdown_series(equity)
         return np.sqrt((dd ** 2).mean())
+
+    @staticmethod
+    def tail_ratio(returns: pd.Series) -> float:
+        p95 = abs(np.percentile(returns, 95))
+        p5 = abs(np.percentile(returns, 5))
+        return p95 / p5 if p5 != 0 else np.inf
+
+    @staticmethod
+    def win_rate(trades: list) -> float:
+        if not trades:
+            return 0.0
+        wins = sum(1 for t in trades if t.pnl > 0)
+        return wins / len(trades)
+
+    @staticmethod
+    def profit_factor(trades: list) -> float:
+        gross_profit = sum(t.pnl for t in trades if t.pnl > 0)
+        gross_loss = abs(sum(t.pnl for t in trades if t.pnl < 0))
+        return gross_profit / gross_loss if gross_loss != 0 else np.inf
