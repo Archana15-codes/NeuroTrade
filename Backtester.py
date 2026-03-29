@@ -818,3 +818,13 @@ class BenchmarkComparator:
                 strat_returns, bh_returns.reindex(strat_returns.index).fillna(0)
             )[0, 1],
         }
+
+# REPORT PRINTER
+class ReportPrinter:
+
+    @staticmethod
+    def print_full(results: dict, wf_results: dict = None,
+                   mc_results: dict = None, bench: dict = None):
+
+        SEP = "=" * 65
+        sep = "-" * 65
