@@ -363,3 +363,24 @@ class Backtester:
             pnl_pct = (self.position.entry_price - exec_price) / self.position.entry_price
 
         self.capital += self.position.size * self.position.entry_price + pnl
+
+        trade = Trade(
+            entry_date=self.position.entry_date,
+            exit_date=date,
+            side=side,
+            entry_price=self.position.entry_price,
+            exit_price=exec_price,
+            size=self.position.size,
+            pnl=pnl,
+            pnl_pct=pnl_pct,
+            mae=self.position.mae,
+            mfe=self.position.mfe,
+            duration_bars=self.position.bars_held,
+            exit_reason=reason,
+            regime=regime,
+            commission=commission,
+        )
+
+        self.trades.append(trade)
+        self.position = Position()
+        return trade
