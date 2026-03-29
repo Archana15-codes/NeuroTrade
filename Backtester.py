@@ -1037,5 +1037,13 @@ def run_full_analysis(df: pd.DataFrame,
     }
 
 # EXAMPLE USAGE
+if __name__ == "__main__":
+    """
+    Drop-in example. Replace `df` with your real OHLCV + indicators DataFrame.
+    Your indicators.py add_all_indicators(df) populates the needed columns.
+    """
 
+    # Generate synthetic OHLCV for demo 
+    np.random.seed(42)
+    n = 1000
 
