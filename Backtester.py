@@ -1021,3 +1021,10 @@ def run_full_analysis(df: pd.DataFrame,
         mc_results = mc.run(results['trades'], config.initial_capital)
 
     wf_results = None
+
+    if run_walk_forward and param_grid:
+        print(">> Running Walk-Forward Optimization...")
+        wf = WalkForwardOptimizer(config, n_splits=5)
+        wf_results = wf.run(df, signal_func, param_grid)
+
+    ReportPrinter.print_full(results, wf_results, mc_results, bench)
