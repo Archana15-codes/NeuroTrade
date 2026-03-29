@@ -1007,3 +1007,9 @@ def run_full_analysis(df: pd.DataFrame,
     print("\n>> Running Backtest...")
     bt = Backtester(config)
     results = bt.run(df, signal_func, signal_kwargs)
+
+    print(">> Running Benchmark Comparison...")
+    bench = BenchmarkComparator.run(
+        results['equity_curve']['equity'],
+        df, config.initial_capital, config.risk_free_rate
+    )
