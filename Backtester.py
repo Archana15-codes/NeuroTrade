@@ -1046,4 +1046,12 @@ if __name__ == "__main__":
     # Generate synthetic OHLCV for demo 
     np.random.seed(42)
     n = 1000
-
+    dates = pd.date_range("2021-01-01", periods=n, freq="B")
+    close = 1000 * np.exp(np.cumsum(np.random.normal(0.0003, 0.015, n)))
+    df = pd.DataFrame({
+        "Open":   close * (1 + np.random.normal(0, 0.002, n)),
+        "High":   close * (1 + np.abs(np.random.normal(0, 0.008, n))),
+        "Low":    close * (1 - np.abs(np.random.normal(0, 0.008, n))),
+        "Close":  close,
+        "Volume": np.random.randint(100_000, 1_000_000, n),
+    }, index=dates)
