@@ -482,3 +482,13 @@ class Backtester:
                     if current_side == PositionSide.SHORT:
                         self._close_position(date, o, reason="signal_flip", regime=regime)
                     self._open_position(date, o, PositionSide.LONG, atr=atr)
+
+                elif signal == PositionSide.SHORT and self.config.allow_shorting and current_side != PositionSide.SHORT:
+                    if current_side == PositionSide.LONG:
+                        self._close_position(date, o, reason="signal_flip", regime=regime)
+                    self._open_position(date, o, PositionSide.SHORT, atr=atr)
+
+            # Equity snapshot
+            portfolio_value = self.capital
+            if self.position.side != PositionSide.FLAT:
+                portfolio_value += self.position.unrealized_pnl
