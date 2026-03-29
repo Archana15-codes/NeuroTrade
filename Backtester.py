@@ -732,3 +732,18 @@ class MonteCarloSimulator:
         sim_finals = []
         sim_maxdds = []
         sim_sharpes = []
+
+        for _ in range(self.n_sims):
+            shuffled = np.random.choice(pnls, size=n, replace=True)
+            equity = initial_capital + np.cumsum(shuffled)
+            returns = np.diff(equity) / equity[:-1]
+
+            sim_finals.append(equity[-1])
+            peak = np.maximum.accumulate(equity)
+            dd = (equity - peak) / peak
+            sim_maxdds.append(dd.min())
+            if returns.std() > 0:
+                sim_sharpes.append(returns.mean() / returns.std() * np.sqrt(252))
+
+        lo = (1 - self.confidence) / 2
+        hi = 1 - lo
