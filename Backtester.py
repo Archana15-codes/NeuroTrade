@@ -934,3 +934,18 @@ class ReportPrinter:
             print(wf_results["fold_results"].to_string(index=False))
 
         print(f"\n{SEP}\n")
+
+# BUILT-IN EXAMPLE STRATEGIES (plug-and-play)
+
+
+def rsi_mean_reversion_signal(df: pd.DataFrame, i: int,
+                               oversold: float = 30,
+                               overbought: float = 70) -> Optional[PositionSide]:
+    if i < 1 or 'RSI' not in df.columns:
+        return None
+    rsi = df['RSI'].iloc[i]
+    if rsi < oversold:
+        return PositionSide.LONG
+    elif rsi > overbought:
+        return PositionSide.SHORT
+    return None
