@@ -674,3 +674,24 @@ class WalkForwardOptimizer:
 
             if best_params is None:
                 continue
+
+            # Evaluate on test (OOS)
+            bt_oos = Backtester(self.config)
+            oos_res = bt_oos.run(test_df, signal_func, best_params)
+
+            oos_results.append({
+                "fold": fold + 1,
+                "train_period": f"{train_df.index[0].date()} - {train_df.index[-1].date()}",
+                "test_period": f"{test_df.index[0].date()} - {test_df.index[-1].date()}",
+                "best_params": best_params,
+                "train_score": best_score,
+                "oos_score": oos_res.get(optimize_metric, np.nan),
+                "oos_return_pct": oos_res.get("total_return_pct", np.nan),
+                "oos_sharpe": oos_res.get("sharpe_ratio", np.nan),
+                "oos_max_dd_pct": oos_res.get("max_drawdown_pct", np.nan),
+            })
+            best_params_per_fold.append(best_params)
+
+            print(f"  Fold {fold+1}: Train Score={best_score:.3f} | "
+                  f"OOS Score={oos_res.get(optimize_metric, 0):.3f} | "
+                  f"Params={best_params}")
