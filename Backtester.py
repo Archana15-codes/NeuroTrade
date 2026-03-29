@@ -1001,3 +1001,9 @@ def run_full_analysis(df: pd.DataFrame,
       4. Walk-Forward (optional)
       5. Print report
     """
+    config = config or BacktestConfig()
+    signal_kwargs = signal_kwargs or {}
+
+    print("\n>> Running Backtest...")
+    bt = Backtester(config)
+    results = bt.run(df, signal_func, signal_kwargs)
