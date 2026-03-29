@@ -533,3 +533,14 @@ class Backtester:
         losing_trades = [t for t in trades if t.pnl <= 0]
         long_trades = [t for t in trades if t.side == PositionSide.LONG]
         short_trades = [t for t in trades if t.side == PositionSide.SHORT]
+        consec = ra.consecutive_stats(trades)
+
+        # Regime breakdown
+        regime_pnl = {}
+        for t in trades:
+            regime_pnl.setdefault(t.regime, []).append(t.pnl)
+        regime_breakdown = {r: {
+            "total_pnl": sum(pnls),
+            "n_trades": len(pnls),
+            "avg_pnl": np.mean(pnls)
+        } for r, pnls in regime_pnl.items()}
