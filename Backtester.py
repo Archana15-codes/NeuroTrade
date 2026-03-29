@@ -232,3 +232,14 @@ class RegimeDetector:
         regimes = []
         closes = df['Close'].values
         n = len(closes)
+        sma50 = pd.Series(closes).rolling(50).mean().values
+        sma200 = pd.Series(closes).rolling(200).mean().values
+
+        high_low = df['High'] - df['Low']
+        atr = high_low.rolling(14).mean().values
+        atr_ma = pd.Series(atr).rolling(50).mean().values
+
+        for i in range(n):
+            if np.isnan(sma200[i]) or np.isnan(atr_ma[i]):
+                regimes.append(MarketRegime.SIDEWAYS.value)
+                continue
