@@ -975,3 +975,14 @@ def sma_trend_signal(df: pd.DataFrame, i: int,
     elif df[fast_col].iloc[i] < df[slow_col].iloc[i]:
         return PositionSide.SHORT
     return None
+def bollinger_breakout_signal(df: pd.DataFrame, i: int) -> Optional[PositionSide]:
+    if i < 1 or 'BB_Upper' not in df.columns:
+        return None
+    close = df['Close'].iloc[i]
+    if close > df['BB_Upper'].iloc[i]:
+        return PositionSide.LONG
+    elif close < df['BB_Lower'].iloc[i]:
+        return PositionSide.SHORT
+    return None
+
+# QUICK-START RUNNER
