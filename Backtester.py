@@ -399,3 +399,14 @@ class Backtester:
             excursion_high = (high - pos.entry_price) / pos.entry_price
             pos.mae = min(pos.mae, excursion_low)
             pos.mfe = max(pos.mfe, excursion_high)
+
+            if pos.trailing_stop_pct:
+                new_ts = high * (1 - pos.trailing_stop_pct)
+                pos.trailing_stop = max(pos.trailing_stop or 0, new_ts)
+                if low <= pos.trailing_stop:
+                    return "trailing_stop"
+
+            if pos.stop_loss and low <= pos.stop_loss:
+                return "stop_loss"
+            if pos.take_profit and high >= pos.take_profit:
+                return "take_profit"
