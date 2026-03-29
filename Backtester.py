@@ -1083,3 +1083,8 @@ if __name__ == "__main__":
         use_atr_sizing    = False,
         risk_free_rate    = 0.06,
     )
+
+    full = run_full_analysis(
+        df            = df,
+        signal_func   = macd_crossover_signal,
+        config        = config,
