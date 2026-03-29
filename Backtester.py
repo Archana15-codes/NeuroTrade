@@ -798,3 +798,23 @@ class BenchmarkComparator:
             bh_returns.reindex(strat_returns.index).fillna(0).mean() - rf / 252
         )
         alpha_annualized = alpha * 252
+        return {
+            "strategy": {
+                "total_return_pct": (strategy_equity.iloc[-1] / initial_capital - 1) * 100,
+                "sharpe": ra.sharpe_ratio(strat_returns, rf),
+                "max_drawdown_pct": ra.max_drawdown(strat_returns) * 100,
+                "annualized_vol_pct": strat_returns.std() * np.sqrt(252) * 100,
+            },
+            "buy_and_hold": {
+                "total_return_pct": (bh_equity.iloc[-1] / initial_capital - 1) * 100,
+                "sharpe": ra.sharpe_ratio(bh_returns, rf),
+                "max_drawdown_pct": ra.max_drawdown(bh_returns) * 100,
+                "annualized_vol_pct": bh_returns.std() * np.sqrt(252) * 100,
+            },
+            "alpha_annualized_pct": alpha_annualized * 100,
+            "beta": beta,
+            "information_ratio": ir,
+            "correlation_with_benchmark": np.corrcoef(
+                strat_returns, bh_returns.reindex(strat_returns.index).fillna(0)
+            )[0, 1],
+        }
