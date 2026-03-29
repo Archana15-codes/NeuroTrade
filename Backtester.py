@@ -1076,3 +1076,7 @@ if __name__ == "__main__":
         commission_pct    = 0.001,
         slippage_pct      = 0.0005,
         position_size_pct = 0.95,
+        stop_loss_pct     = 0.03,
+        take_profit_pct   = 0.06,
+        trailing_stop_pct = 0.025,
+        allow_shorting    = True,
