@@ -462,3 +462,10 @@ class Backtester:
             o, h, l, c = row['Open'], row['High'], row['Low'], row['Close']
             atr = row.get('ATR', None) if hasattr(row, 'get') else None
             regime = regimes.iloc[i]
+            # Update open position
+            exit_reason = self._update_position(h, l, c)
+            if exit_reason and self.position.side != PositionSide.FLAT:
+                self._close_position(date, c, reason=exit_reason, regime=regime)
+
+            #  Get signal
+            signal = signal_func(df, i, **signal_kwargs)
