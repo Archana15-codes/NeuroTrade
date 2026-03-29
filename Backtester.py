@@ -302,3 +302,14 @@ class Backtester:
         self.daily_returns = []
         self.regimes = []
         self._aborted = False
+
+    # ----------------------------------------------------------
+    # SIGNAL EXECUTION
+    # ----------------------------------------------------------
+
+    def _apply_slippage(self, price: float, side: OrderSide) -> float:
+        slip = price * self.config.slippage_pct
+        return price + slip if side == OrderSide.BUY else price - slip
+
+    def _apply_commission(self, trade_value: float) -> float:
+        return trade_value * self.config.commission_pct
