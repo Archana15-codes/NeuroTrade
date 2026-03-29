@@ -790,3 +790,11 @@ class BenchmarkComparator:
         active_returns = strat_returns.values - bh_returns.reindex(strat_returns.index).fillna(0).values
         ir = (active_returns.mean() / active_returns.std() * np.sqrt(252)
               if active_returns.std() != 0 else 0)
+
+        # Beta
+        cov = np.cov(strat_returns, bh_returns.reindex(strat_returns.index).fillna(0))
+        beta = cov[0, 1] / cov[1, 1] if cov[1, 1] != 0 else 1.0
+        alpha = (strat_returns.mean() - rf / 252) - beta * (
+            bh_returns.reindex(strat_returns.index).fillna(0).mean() - rf / 252
+        )
+        alpha_annualized = alpha * 252
