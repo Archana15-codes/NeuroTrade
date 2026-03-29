@@ -100,3 +100,16 @@ class RiskAnalytics:
             return 0.0
         return np.sqrt(ann) * excess.mean() / downside
 
+    @staticmethod
+    def calmar_ratio(returns: pd.Series, ann: int = 252) -> float:
+        annual_return = returns.mean() * ann
+        mdd = RiskAnalytics.max_drawdown(returns)
+        if mdd == 0:
+            return 0.0
+        return annual_return / abs(mdd)
+
+    @staticmethod
+    def omega_ratio(returns: pd.Series, threshold: float = 0.0) -> float:
+        gains = returns[returns > threshold].sum()
+        losses = abs(returns[returns < threshold].sum())
+        return gains / losses if losses != 0 else np.inf
