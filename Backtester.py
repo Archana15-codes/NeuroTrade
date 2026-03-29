@@ -761,3 +761,14 @@ class MonteCarloSimulator:
             "max_drawdown_pct": {
                 "mean": np.mean(sim_maxdds) * 100,
                 "worst_5pct": np.percentile(sim_maxdds, 5) * 100,
+            },
+            "sharpe_ratio": {
+                "mean": np.mean(sim_sharpes),
+                "p5": np.percentile(sim_sharpes, 5),
+                "p95": np.percentile(sim_sharpes, 95),
+            },
+            "raw_finals": np.array(sim_finals),
+            "raw_maxdds": np.array(sim_maxdds),
+        }
+
+
