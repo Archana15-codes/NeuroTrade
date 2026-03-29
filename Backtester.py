@@ -910,4 +910,16 @@ class ReportPrinter:
             print(f"  Beta                 : {bench['beta']:.4f}")
             print(f"  Information Ratio    : {bench['information_ratio']:.4f}")
             print(f"  Benchmark Corr.      : {bench['correlation_with_benchmark']:.4f}")
+        if mc_results:
+            print(f"\n{'MONTE CARLO ({} sims)'.format(mc_results['n_simulations']):^65}")
+            print(sep)
+            fe = mc_results["final_equity"]
+            print(f"  Prob. of Profit      : {fe['prob_profit']*100:>14.1f}%")
+            print(f"  Median Final Equity  : ${fe['median']:>14,.2f}")
+            print(f"  5th Pct Equity       : ${fe.get('p2', fe.get('p5', 0)):>14,.2f}")
+            print(f"  95th Pct Equity      : ${fe.get('p97', fe.get('p95', 0)):>14,.2f}")
+            dd = mc_results["max_drawdown_pct"]
+            print(f"  Worst 5% MaxDD       : {dd['worst_5pct']:>14.2f}%")
+            sr = mc_results["sharpe_ratio"]
+            print(f"  Sharpe (p5-p95)      : [{sr['p5']:.3f}, {sr['p95']:.3f}]")
 
