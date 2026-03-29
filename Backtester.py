@@ -313,3 +313,14 @@ class Backtester:
 
     def _apply_commission(self, trade_value: float) -> float:
         return trade_value * self.config.commission_pct
+    def _open_position(self, date, price, side: PositionSide,
+                       atr: float = None, returns_hist: pd.Series = None):
+        exec_price = self._apply_slippage(
+            price, OrderSide.BUY if side == PositionSide.LONG else OrderSide.SELL
+        )
+
+        cfg = self.config
+        if cfg.use_atr_sizing and atr is not None and atr > 0:
+            size = PositionSizer.atr_based(self.capital, exec_price, atr, cfg.atr_risk_pct)
+        else:
+            size = PositionSizer.fixed_fractional(self.capital, exec_price, cfg.position_size_pct)
