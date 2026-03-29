@@ -949,3 +949,17 @@ def rsi_mean_reversion_signal(df: pd.DataFrame, i: int,
     elif rsi > overbought:
         return PositionSide.SHORT
     return None
+
+def macd_crossover_signal(df: pd.DataFrame, i: int) -> Optional[PositionSide]:
+    if i < 1 or 'MACD' not in df.columns or 'MACD_signal' not in df.columns:
+        return None
+    macd_prev = df['MACD'].iloc[i - 1]
+    sig_prev = df['MACD_signal'].iloc[i - 1]
+    macd_cur = df['MACD'].iloc[i]
+    sig_cur = df['MACD_signal'].iloc[i]
+
+    if macd_prev <= sig_prev and macd_cur > sig_cur:
+        return PositionSide.LONG
+    elif macd_prev >= sig_prev and macd_cur < sig_cur:
+        return PositionSide.SHORT
+    return None
