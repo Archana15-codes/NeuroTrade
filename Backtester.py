@@ -890,3 +890,13 @@ class ReportPrinter:
         print(sep)
         for reason, count in results.get("exit_reasons", {}).items():
             print(f"  {reason:<25}: {count:>5}")
+        print(f"\n{'REGIME BREAKDOWN':^65}")
+        print(sep)
+        for regime, stats in results.get("regime_breakdown", {}).items():
+            print(f"  {regime:<18}: trades={stats['n_trades']:>4}  "
+                  f"total PnL=${stats['total_pnl']:>10,.2f}  "
+                  f"avg=${stats['avg_pnl']:>8,.2f}")
+
+        if bench:
+            print(f"\n{'BENCHMARK COMPARISON':^65}")
+            print(sep)
