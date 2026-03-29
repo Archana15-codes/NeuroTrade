@@ -125,3 +125,22 @@ class RiskAnalytics:
     def drawdown_series(equity: pd.Series) -> pd.Series:
         roll_max = equity.cummax()
         return (equity - roll_max) / roll_max
+
+    @staticmethod
+    def max_drawdown_duration(equity: pd.Series) -> int:
+        dd = RiskAnalytics.drawdown_series(equity)
+        in_dd = dd < 0
+        durations = []
+        count = 0
+        for val in in_dd:
+            if val:
+                count += 1
+            else:
+                if count > 0:
+                    durations.append(count)
+                count = 0
+        return max(durations) if durations else 0
+
+    @staticmethod
+    def var(returns: pd.Series, confidence: float = 0.95) -> float:
+        return np.percentile(returns, (1 - confidence) * 100)
