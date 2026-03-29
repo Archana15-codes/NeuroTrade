@@ -469,3 +469,16 @@ class Backtester:
 
             #  Get signal
             signal = signal_func(df, i, **signal_kwargs)
+
+            # --- Execute signal ---
+            if signal is not None:
+                current_side = self.position.side
+
+                # Flip or open
+                if signal == PositionSide.FLAT and current_side != PositionSide.FLAT:
+                    self._close_position(date, o, reason="signal", regime=regime)
+
+                elif signal == PositionSide.LONG and current_side != PositionSide.LONG:
+                    if current_side == PositionSide.SHORT:
+                        self._close_position(date, o, reason="signal_flip", regime=regime)
+                    self._open_position(date, o, PositionSide.LONG, atr=atr)
