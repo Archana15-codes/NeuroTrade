@@ -557,24 +557,24 @@ class Backtester:
             "annualized_return_pct": ann_return * 100,
             "aborted_early": self._aborted,
 
-            # ── Risk-Adjusted Returns ──
+            #Risk-Adjusted Returns
             "sharpe_ratio": ra.sharpe_ratio(returns, cfg.risk_free_rate, cfg.annualization_factor),
             "sortino_ratio": ra.sortino_ratio(returns, cfg.risk_free_rate, cfg.annualization_factor),
             "calmar_ratio": ra.calmar_ratio(returns, cfg.annualization_factor),
             "omega_ratio": ra.omega_ratio(returns),
 
-            # ── Drawdown ──
+            # Drawdown
             "max_drawdown_pct": ra.max_drawdown(returns) * 100,
             "max_drawdown_duration_bars": ra.max_drawdown_duration(equity_series),
             "ulcer_index": ra.ulcer_index(equity_series),
 
-            # ── Tail Risk ──
+            # Tail Risk
             "var_95_pct": ra.var(returns, 0.95) * 100,
             "cvar_95_pct": ra.cvar(returns, 0.95) * 100,
             "tail_ratio": ra.tail_ratio(returns),
             "daily_vol_annualized_pct": returns.std() * np.sqrt(cfg.annualization_factor) * 100,
 
-            # ── Trade Statistics ──
+            #Trade Statistics
             "total_trades": len(trades),
             "long_trades": len(long_trades),
             "short_trades": len(short_trades),
@@ -585,7 +585,7 @@ class Backtester:
             "expectancy_per_trade": ra.expectancy(trades),
             "kelly_criterion_pct": ra.kelly_criterion(trades) * 100,
 
-            # ── Trade PnL ──
+            # Trade PnL
             "gross_profit": sum(t.pnl for t in winning_trades),
             "gross_loss": sum(t.pnl for t in losing_trades),
             "avg_win": np.mean([t.pnl for t in winning_trades]) if winning_trades else 0,
@@ -594,6 +594,23 @@ class Backtester:
             "largest_loss": min((t.pnl for t in trades), default=0),
             "avg_trade_duration_bars": np.mean([t.duration_bars for t in trades]) if trades else 0,
 
-            # ── MAE / MFE ──
+            # MAE / MFE
             "avg_mae_pct": avg_mae * 100,
             "avg_mfe_pct": avg_mfe * 100,
+
+            # Consecutive
+            **consec,
+
+            # Exit Reasons
+            "exit_reasons": pd.Series([t.exit_reason for t in trades]).value_counts().to_dict(),
+
+            # Regime Breakdown
+            "regime_breakdown": regime_breakdown,
+
+            #  Series (for plotting) 
+            "equity_curve": equity_df,
+            "trades": trades,
+            "returns": returns,
+        }
+
+        return results
