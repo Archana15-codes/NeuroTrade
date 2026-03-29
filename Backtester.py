@@ -771,4 +771,11 @@ class MonteCarloSimulator:
             "raw_maxdds": np.array(sim_maxdds),
         }
 
+# BENCHMARK COMPARATOR
 
+class BenchmarkComparator:
+    """Compare strategy against buy-and-hold benchmark."""
+
+    @staticmethod
+    def run(strategy_equity: pd.Series, df: pd.DataFrame,
+            initial_capital: float, rf: float = 0.06) -> dict:
