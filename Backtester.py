@@ -256,3 +256,21 @@ class RegimeDetector:
                 regimes.append(MarketRegime.SIDEWAYS.value)
 
         return pd.Series(regimes, index=df.index)
+
+
+# POSITION SIZER
+
+class PositionSizer:
+
+    @staticmethod
+    def fixed_fractional(capital: float, price: float, pct: float) -> float:
+        return (capital * pct) / price
+
+    @staticmethod
+    def atr_based(capital: float, price: float, atr: float,
+                  risk_pct: float = 0.01) -> float:
+        """Risk a fixed % of capital per 1 ATR move."""
+        if atr <= 0:
+            return 0
+        risk_amount = capital * risk_pct
+        return risk_amount / atr
