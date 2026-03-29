@@ -544,3 +544,15 @@ class Backtester:
             "n_trades": len(pnls),
             "avg_pnl": np.mean(pnls)
         } for r, pnls in regime_pnl.items()}
+
+        # MAE / MFE analysis
+        avg_mae = np.mean([t.mae for t in trades]) if trades else 0
+        avg_mfe = np.mean([t.mfe for t in trades]) if trades else 0
+
+        results = {
+            # Portfolio Performance 
+            "initial_capital": cfg.initial_capital,
+            "final_capital": equity_series.iloc[-1],
+            "total_return_pct": total_return * 100,
+            "annualized_return_pct": ann_return * 100,
+            "aborted_early": self._aborted,
