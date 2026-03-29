@@ -779,3 +779,14 @@ class BenchmarkComparator:
     @staticmethod
     def run(strategy_equity: pd.Series, df: pd.DataFrame,
             initial_capital: float, rf: float = 0.06) -> dict:
+        bh_returns = df['Close'].pct_change().dropna()
+        bh_equity = initial_capital * (1 + bh_returns).cumprod()
+
+        strat_returns = strategy_equity.pct_change().dropna()
+
+        ra = RiskAnalytics
+
+        # Information Ratio
+        active_returns = strat_returns.values - bh_returns.reindex(strat_returns.index).fillna(0).values
+        ir = (active_returns.mean() / active_returns.std() * np.sqrt(252)
+              if active_returns.std() != 0 else 0)
