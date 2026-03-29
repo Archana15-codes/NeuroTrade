@@ -1080,3 +1080,6 @@ if __name__ == "__main__":
         take_profit_pct   = 0.06,
         trailing_stop_pct = 0.025,
         allow_shorting    = True,
+        use_atr_sizing    = False,
+        risk_free_rate    = 0.06,
+    )
