@@ -173,3 +173,22 @@ class RiskAnalytics:
         gross_profit = sum(t.pnl for t in trades if t.pnl > 0)
         gross_loss = abs(sum(t.pnl for t in trades if t.pnl < 0))
         return gross_profit / gross_loss if gross_loss != 0 else np.inf
+
+    @staticmethod
+    def expectancy(trades: list) -> float:
+        if not trades:
+            return 0.0
+        wr = RiskAnalytics.win_rate(trades)
+        avg_win = np.mean([t.pnl for t in trades if t.pnl > 0]) if any(t.pnl > 0 for t in trades) else 0
+        avg_loss = abs(np.mean([t.pnl for t in trades if t.pnl < 0])) if any(t.pnl < 0 for t in trades) else 0
+        return (wr * avg_win) - ((1 - wr) * avg_loss)
+
+    @staticmethod
+    def kelly_criterion(trades: list) -> float:
+        wr = RiskAnalytics.win_rate(trades)
+        avg_win = np.mean([t.pnl_pct for t in trades if t.pnl > 0]) if any(t.pnl > 0 for t in trades) else 0
+        avg_loss = abs(np.mean([t.pnl_pct for t in trades if t.pnl < 0])) if any(t.pnl < 0 for t in trades) else 0
+        if avg_loss == 0:
+            return 0.0
+        rr = avg_win / avg_loss
+        return wr - (1 - wr) / rr
