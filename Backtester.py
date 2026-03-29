@@ -511,3 +511,14 @@ class Backtester:
             self._close_position(df.index[-1], last['Close'], reason="end_of_data")
 
         return self._compile_results(df)
+
+    # RESULTS COMPILATION
+
+    def _compile_results(self, df: pd.DataFrame) -> dict:
+        equity_df = pd.DataFrame(self.equity_curve).set_index("date")
+        equity_series = equity_df['equity']
+        returns = pd.Series(self.daily_returns)
+
+        ra = RiskAnalytics
+        cfg = self.config
+        trades = self.trades
