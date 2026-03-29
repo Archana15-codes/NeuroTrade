@@ -498,3 +498,16 @@ class Backtester:
             ret = (portfolio_value - prev_equity) / prev_equity if prev_equity != 0 else 0
             self.daily_returns.append(ret)
             prev_equity = portfolio_value
+
+            # Drawdown abort 
+            peak = max(e['equity'] for e in self.equity_curve)
+            if (portfolio_value - peak) / peak < -self.config.max_drawdown_abort:
+                self._aborted = True
+                break
+
+        # Close any open position at end
+        if self.position.side != PositionSide.FLAT:
+            last = df.iloc[-1]
+            self._close_position(df.index[-1], last['Close'], reason="end_of_data")
+
+        return self._compile_results(df)
