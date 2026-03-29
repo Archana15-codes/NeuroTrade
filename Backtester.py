@@ -986,3 +986,18 @@ def bollinger_breakout_signal(df: pd.DataFrame, i: int) -> Optional[PositionSide
     return None
 
 # QUICK-START RUNNER
+def run_full_analysis(df: pd.DataFrame,
+                      signal_func: Callable,
+                      signal_kwargs: dict = None,
+                      config: BacktestConfig = None,
+                      run_walk_forward: bool = True,
+                      run_monte_carlo: bool = True,
+                      param_grid: dict = None) -> dict:
+    """
+    One-call full analysis:
+      1. Backtest
+      2. Benchmark comparison
+      3. Monte Carlo
+      4. Walk-Forward (optional)
+      5. Print report
+    """
