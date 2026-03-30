@@ -31,3 +31,15 @@ class APIConfig:
     fred_api_key:         str  = os.getenv("FRED_API_KEY", "")
     alpha_vantage_key:    str  = os.getenv("ALPHA_VANTAGE_KEY", "")
     polygon_key:          str  = os.getenv("POLYGON_KEY", "")
+
+# defaults 
+    default_ticker:       str  = "AAPL"
+    default_start:        str  = "2018-01-01"
+    default_end:          str  = datetime.today().strftime("%Y-%m-%d")
+    default_interval:     str  = "1d"          # 1m 5m 15m 30m 1h 1d 1wk
+    cache_dir:            str  = "./cache"
+    use_cache:            bool = True
+    request_delay:        float = 0.3          # seconds between API calls
+
+
+CONFIG = APIConfig()
