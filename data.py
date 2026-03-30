@@ -15,3 +15,10 @@ try:
 except ImportError:
     _YF_AVAILABLE = False
     print("[data.py] yfinance not installed — pip install yfinance")
+
+try:
+    from fredapi import Fred
+    _FRED_AVAILABLE = True
+except ImportError:
+    _FRED_AVAILABLE = False
+    print("[data.py] fredapi not installed — pip install fredapi")
