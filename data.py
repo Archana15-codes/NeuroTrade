@@ -247,3 +247,17 @@ FRED_SERIES = {
     "DGS30":   "30Y Treasury Yield",
     "T10Y2Y":  "Yield Curve (10Y-2Y)",
     "T10YFF":  "10Y Treasury - Fed Funds Spread",
+
+    # inflation 
+    "CPIAUCSL": "CPI (All Urban Consumers)",
+    "CPILFESL": "Core CPI (ex Food & Energy)",
+    "PCEPI":    "PCE Price Index",
+    "T5YIE":    "5Y Breakeven Inflation",
+    "T10YIE":   "10Y Breakeven Inflation",
+
+    # growth / activity 
+    "GDP":      "Nominal GDP",
+    "GDPC1":    "Real GDP",
+    "INDPRO":   "Industrial Production",
+    "RETAILSMNSA": "Retail Sales",
+    "HOUST":    "Housing Starts",
