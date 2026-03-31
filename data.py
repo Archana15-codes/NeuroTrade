@@ -218,3 +218,9 @@ class YFinanceLoader:
         """Returns {ticker: DataFrame}."""
         result = {}
         for t in tickers:
+            try:
+                result[t] = YFinanceLoader.fetch(t, start, end, interval)
+                time.sleep(CONFIG.request_delay)
+            except Exception as e:
+                print(f"[YFinance] Failed {t}: {e}")
+        return result
