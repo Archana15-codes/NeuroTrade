@@ -43,3 +43,9 @@ class APIConfig:
 
 
 CONFIG = APIConfig()
+
+# CACHE HELPERS
+def _cache_path(key: str) -> str:
+    os.makedirs(CONFIG.cache_dir, exist_ok=True)
+    safe = key.replace("/", "_").replace(" ", "_").replace(":", "_")
+    return os.path.join(CONFIG.cache_dir, f"{safe}.parquet")
