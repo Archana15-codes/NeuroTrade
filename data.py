@@ -277,3 +277,13 @@ FRED_SERIES = {
     "VIXCLS":   "CBOE VIX",
     "UMCSENT":  "U Michigan Consumer Sentiment",
 }
+
+class FREDLoader:
+    """
+    Fetches macro time-series from FRED.
+    Returns a single merged DataFrame indexed by date.
+    """
+
+    def __init__(self, api_key: str = CONFIG.fred_api_key):
+        if not _FRED_AVAILABLE:
+            raise ImportError("fredapi not installed — pip install fredapi")
