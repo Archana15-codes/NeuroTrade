@@ -146,3 +146,15 @@ class OHLCVCleaner:
         df["Ticker"]      = ticker
 
         return df
+    @classmethod
+    def validate(cls, df: pd.DataFrame) -> dict:
+        """Return a health report dict — useful for dashboard display."""
+        return {
+            "rows":            len(df),
+            "start":           str(df.index[0].date()),
+            "end":             str(df.index[-1].date()),
+            "missing_pct":     round(df[cls.REQUIRED].isna().mean().mean() * 100, 2),
+            "zero_vol_rows":   int((df["Volume"] == 0).sum()),
+            "duplicate_dates": int(df.index.duplicated().sum()),
+            "price_range":     f"{df['Close'].min():.2f} – {df['Close'].max():.2f}",
+        }
