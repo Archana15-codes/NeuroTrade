@@ -457,3 +457,16 @@ class AlphaVantageLoader:
         month:    str = None,         # "2024-01" for historical premium
         use_cache: bool = CONFIG.use_cache,
     ) -> pd.DataFrame:
+
+        cache_key = f"av_intra_{ticker}_{interval}_{month or 'live'}"
+        if use_cache:
+            cached = _cache_load(cache_key, max_age_hours=1)
+            if cached is not None:
+                return cached
+
+        params = {
+            "function": "TIME_SERIES_INTRADAY",
+            "symbol": ticker,
+            "interval": interval,
+            "outputsize": "full",
+        }
