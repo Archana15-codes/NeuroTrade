@@ -122,3 +122,11 @@ class OHLCVCleaner:
         if missing:
             raise ValueError(f"[OHLCVCleaner] Missing columns: {missing}  (ticker={ticker})")
         df = df[cls.REQUIRED].astype(float)
+
+        # fill / drop NaN 
+        df.ffill(inplace=True)
+        df.dropna(inplace=True)
+
+        # sanity checks
+        bad_price = (df[["Open", "High", "Low", "Close"]] <= 0).any(axis=1)
+        bad_hl    = df["High"] < df["Low"]
