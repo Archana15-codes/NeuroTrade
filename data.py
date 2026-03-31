@@ -82,3 +82,11 @@ class OHLCVCleaner:
       - No duplicate timestamps
       - Prices validated: High >= Low, all > 0
     """
+    REQUIRED = ["Open", "High", "Low", "Close", "Volume"]
+
+    @classmethod
+    def clean(cls, df: pd.DataFrame, ticker: str = "") -> pd.DataFrame:
+        df = df.copy()
+
+        # 1. standardise column names
+        df.columns = [c.strip().title() for c in df.columns]
