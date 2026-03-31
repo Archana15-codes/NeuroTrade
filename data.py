@@ -224,3 +224,13 @@ class YFinanceLoader:
             except Exception as e:
                 print(f"[YFinance] Failed {t}: {e}")
         return result
+
+    @staticmethod
+    def fetch_info(ticker: str) -> dict:
+        """Returns company metadata dict."""
+        if not _YF_AVAILABLE:
+            return {}
+        try:
+            return yf.Ticker(ticker).info
+        except Exception:
+            return {}
