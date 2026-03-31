@@ -470,3 +470,10 @@ class AlphaVantageLoader:
             "interval": interval,
             "outputsize": "full",
         }
+        if month:
+            params["month"] = month
+
+        data = self._get(params)
+        key = [k for k in data if "Time Series" in k][0]
+        raw = pd.DataFrame(data[key]).T
+        raw.index = pd.to_datetime(raw.index)
