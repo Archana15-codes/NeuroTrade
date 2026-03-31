@@ -381,3 +381,12 @@ class FREDLoader:
             long  = df.get("Y30", df.get("Y10"))
             if short is not None and long is not None:
                 df["Curve_3M_30Y"] = long - short
+        if "Y2" in df and "Y5" in df and "Y10" in df:
+            df["Curvature"]   = 2 * df["Y5"] - df["Y2"] - df["Y10"]
+        if "Y10" in df:
+            df["Y10_MOM_3M"]  = df["Y10"].diff(63)
+            df["Y10_MOM_1M"]  = df["Y10"].diff(21)
+
+        return df
+
+# SOURCE 3 — Alpha Vantage  (backup + intraday + forex + crypto)
