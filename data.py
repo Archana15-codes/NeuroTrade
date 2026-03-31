@@ -357,4 +357,17 @@ class FREDLoader:
     ) -> pd.DataFrame:
         """
         Returns daily yield curve with derived slope + curvature features.
-        Usefu
+        Usefuul for regime detection.
+        """
+        tenors = {
+            "DGS1MO": "Y0_08", "DGS3MO": "Y0_25", "DGS6MO": "Y0_5",
+            "DGS1": "Y1", "DGS2": "Y2", "DGS3": "Y3",
+            "DGS5": "Y5", "DGS7": "Y7", "DGS10": "Y10",
+            "DGS20": "Y20", "DGS30": "Y30",
+        }
+        frames = {}
+        for fid, col in tenors.items():
+            try:
+                frames[col] = self.fetch_series(fid, start, end)
+            except Exception:
+                pass
