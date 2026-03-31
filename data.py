@@ -61,3 +61,10 @@ def _cache_load(key: str, max_age_hours: int = 4) -> Optional[pd.DataFrame]:
     p = _cache_path(key)
     if not os.path.exists(p):
         return None
+    age = (time.time() - os.path.getmtime(p)) / 3600
+    if age > max_age_hours:
+        return None
+    try:
+        return pd.read_parquet(p)
+    except Exception:
+        return None
