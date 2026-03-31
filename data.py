@@ -510,3 +510,13 @@ class AlphaVantageLoader:
             "symbol": symbol,
             "market": market,
         })
+        raw = pd.DataFrame(data["Time Series (Digital Currency Daily)"]).T
+        raw.index = pd.to_datetime(raw.index)
+        raw.rename(columns={
+            f"1a. open ({market})":   "Open",
+            f"2a. high ({market})":   "High",
+            f"3a. low ({market})":    "Low",
+            f"4a. close ({market})":  "Close",
+            "5. volume":              "Volume",
+        }, inplace=True)
+        return OHLCVCleaner.clean(raw, f"{symbol}/{market}")
