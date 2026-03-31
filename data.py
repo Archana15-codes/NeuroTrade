@@ -200,3 +200,10 @@ class YFinanceLoader:
         # yfinance returns MultiIndex columns when downloading single ticker
         if isinstance(raw.columns, pd.MultiIndex):
             raw.columns = raw.columns.get_level_values(0)
+
+        df = OHLCVCleaner.clean(raw, ticker)
+
+        if use_cache:
+            _cache_save(df, cache_key)
+
+        return df
