@@ -424,3 +424,12 @@ class AlphaVantageLoader:
         adjusted:  bool = True,
         use_cache: bool = CONFIG.use_cache,
     ) -> pd.DataFrame:
+
+        cache_key = f"av_daily_{ticker}_{outputsize}_{adjusted}"
+        if use_cache:
+            cached = _cache_load(cache_key, max_age_hours=24)
+            if cached is not None:
+                return cached
+
+        func = "TIME_SERIES_DAILY_ADJUSTED" if adjusted else "TIME_SERIES_DAILY"
+        data = self._get({"function": func, "symbol": ticker, "outputsize": outputsize})
