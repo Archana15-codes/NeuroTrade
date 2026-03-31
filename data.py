@@ -477,3 +477,13 @@ class AlphaVantageLoader:
         key = [k for k in data if "Time Series" in k][0]
         raw = pd.DataFrame(data[key]).T
         raw.index = pd.to_datetime(raw.index)
+
+        rename = {
+            "1. open": "Open", "2. high": "High",
+            "3. low": "Low", "4. close": "Close", "5. volume": "Volume",
+        }
+        raw.rename(columns=rename, inplace=True)
+        df = OHLCVCleaner.clean(raw, ticker)
+        if use_cache:
+            _cache_save(df, cache_key)
+        return df
