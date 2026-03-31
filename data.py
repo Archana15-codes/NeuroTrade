@@ -116,3 +116,9 @@ class OHLCVCleaner:
         df.index = df.index.tz_localize(None) if df.index.tz else df.index
         df.sort_index(inplace=True)
         df = df[~df.index.duplicated(keep="last")]
+
+        # keep only OHLCV 
+        missing = [c for c in cls.REQUIRED if c not in df.columns]
+        if missing:
+            raise ValueError(f"[OHLCVCleaner] Missing columns: {missing}  (ticker={ticker})")
+        df = df[cls.REQUIRED].astype(float)
