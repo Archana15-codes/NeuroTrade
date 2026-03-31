@@ -293,3 +293,12 @@ class FREDLoader:
                 "Then set: export FRED_API_KEY='your_key_here'"
             )
         self.fred = Fred(api_key=api_key)
+    def fetch_series(
+        self,
+        series_id:  str,
+        start:      str = "2000-01-01",
+        end:        str = CONFIG.default_end,
+        use_cache:  bool = CONFIG.use_cache,
+    ) -> pd.Series:
+        cache_key = f"fred_{series_id}_{start}_{end}"
+        if use_cache:
