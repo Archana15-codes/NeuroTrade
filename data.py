@@ -349,3 +349,12 @@ class FREDLoader:
         panel.ffill(inplace=True)
         panel.dropna(how="all", inplace=True)
         return panel
+
+    def fetch_yield_curve(
+        self,
+        start: str = "2000-01-01",
+        end:   str = CONFIG.default_end,
+    ) -> pd.DataFrame:
+        """
+        Returns daily yield curve with derived slope + curvature features.
+        Usefu
