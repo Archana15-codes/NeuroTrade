@@ -495,3 +495,11 @@ class AlphaVantageLoader:
             "to_symbol": to_sym,
             "outputsize": "full",
         })
+        raw = pd.DataFrame(data["Time Series FX (Daily)"]).T
+        raw.index = pd.to_datetime(raw.index)
+        raw.rename(columns={
+            "1. open": "Open", "2. high": "High",
+            "3. low": "Low", "4. close": "Close",
+        }, inplace=True)
+        raw["Volume"] = 0
+        return OHLCVCleaner.clean(raw, f"{from_sym}/{to_sym}")
