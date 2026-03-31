@@ -444,3 +444,16 @@ class AlphaVantageLoader:
             "6. volume": "Volume",
         }
         raw.rename(columns=rename, inplace=True)
+
+        df = OHLCVCleaner.clean(raw, ticker)
+        if use_cache:
+            _cache_save(df, cache_key)
+        return df
+
+    def fetch_intraday(
+        self,
+        ticker:   str,
+        interval: str = "5min",       # 1min 5min 15min 30min 60min
+        month:    str = None,         # "2024-01" for historical premium
+        use_cache: bool = CONFIG.use_cache,
+    ) -> pd.DataFrame:
