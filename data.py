@@ -310,3 +310,11 @@ class FREDLoader:
                     pass
 
         time.sleep(CONFIG.request_delay)
+        s = self.fred.get_series(series_id, observation_start=start, observation_end=end)
+        s.index = pd.to_datetime(s.index).tz_localize(None)
+        s.name = series_id
+
+        if use_cache:
+            s.to_frame().to_parquet(_cache_path(cache_key))
+
+        return s
