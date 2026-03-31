@@ -390,3 +390,11 @@ class FREDLoader:
         return df
 
 # SOURCE 3 — Alpha Vantage  (backup + intraday + forex + crypto)
+
+class AlphaVantageLoader:
+    """
+    Alpha Vantage REST API wrapper.
+    Free tier: 25 requests/day.  Premium: 75–1200 requests/min.
+    """
+
+    BASE = "https://www.alphavantage.co/query"
