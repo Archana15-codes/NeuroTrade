@@ -261,3 +261,19 @@ FRED_SERIES = {
     "INDPRO":   "Industrial Production",
     "RETAILSMNSA": "Retail Sales",
     "HOUST":    "Housing Starts",
+
+    #labour 
+    "UNRATE":   "Unemployment Rate",
+    "PAYEMS":   "Nonfarm Payrolls",
+    "ICSA":     "Initial Jobless Claims",
+
+    #credit / liquidity 
+    "BAMLH0A0HYM2": "HY Credit Spread (OAS)",
+    "BAMLC0A0CM":   "IG Credit Spread (OAS)",
+    "M2SL":         "M2 Money Supply",
+    "DPSACBW027SBOG": "Bank Deposits",
+
+    #sentiment / fear 
+    "VIXCLS":   "CBOE VIX",
+    "UMCSENT":  "U Michigan Consumer Sentiment",
+}
