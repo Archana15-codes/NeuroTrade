@@ -340,3 +340,12 @@ class FREDLoader:
                 print(f"  [FRED] {sid:20s} {FRED_SERIES.get(sid, '')}")
             except Exception as e:
                 print(f"  [FRED] SKIP {sid}: {e}")
+
+        if not frames:
+            return pd.DataFrame()
+
+        panel = pd.concat(frames, axis=1)
+        panel = panel.resample(resample).last()
+        panel.ffill(inplace=True)
+        panel.dropna(how="all", inplace=True)
+        return panel
