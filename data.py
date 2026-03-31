@@ -109,3 +109,10 @@ class OHLCVCleaner:
         if "Adj Close" in df.columns and "Close" in df.columns:
             df["Close"] = df["Adj Close"]
             df.drop(columns=["Adj Close"], inplace=True, errors="ignore")
+
+        #index → DatetimeIndex
+        if not isinstance(df.index, pd.DatetimeIndex):
+            df.index = pd.to_datetime(df.index, utc=True)
+        df.index = df.index.tz_localize(None) if df.index.tz else df.index
+        df.sort_index(inplace=True)
+        df = df[~df.index.duplicated(keep="last")]
