@@ -503,3 +503,10 @@ class AlphaVantageLoader:
         }, inplace=True)
         raw["Volume"] = 0
         return OHLCVCleaner.clean(raw, f"{from_sym}/{to_sym}")
+
+    def fetch_crypto(self, symbol: str, market: str = "USD") -> pd.DataFrame:
+        data = self._get({
+            "function": "DIGITAL_CURRENCY_DAILY",
+            "symbol": symbol,
+            "market": market,
+        })
