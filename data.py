@@ -619,3 +619,13 @@ class PolymarketLoader:
         except Exception as e:
             print(f"[Polymarket] History error: {e}")
             return pd.DataFrame()
+
+# SOURCE 5 — Kalshi  (regulated US prediction market)
+
+class KalshiLoader:
+    """
+    Fetches market data from Kalshi (regulated CFTC exchange).
+    Public endpoints need no auth.  Trading requires OAuth.
+    """
+
+    BASE = "https://trading-api.kalshi.com/trade-api/v2"
