@@ -692,3 +692,18 @@ class MacroFeatureBuilder:
     Adds derived macro features useful for regime detection.
     Output df is ready for indicators.py → add_all_indicators()
     """
+    @staticmethod
+    def merge(
+        price_df:  pd.DataFrame,
+        macro_df:  pd.DataFrame,
+        method:    str = "ffill",       # how to align lower-freq macro to daily
+    ) -> pd.DataFrame:
+        """
+        Left-join macro onto price by date.
+        macro_df dates that don't align to trading days are forward-filled.
+        """
+        if macro_df.empty:
+            return price_df
+
+        aligned = macro_df.reindex(price_df.index, method=method)
+        return pd.concat([price_df, aligned], axis=1)
