@@ -611,3 +611,11 @@ class PolymarketLoader:
             history = r.json().get("history", [])
             df = pd.DataFrame(history)
             if not df.empty:
+                df["date"] = pd.to_datetime(df["t"], unit="s")
+                df.rename(columns={"p": "yes_prob"}, inplace=True)
+                df.set_index("date", inplace=True)
+                df = df[["yes_prob"]]
+            return df
+        except Exception as e:
+            print(f"[Polymarket] History error: {e}")
+            return pd.DataFrame()
