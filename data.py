@@ -593,3 +593,12 @@ class PolymarketLoader:
                 params={"token_id": token_id},
                 timeout=10
             )
+            r.raise_for_status()
+            return r.json()
+        except Exception as e:
+            print(f"[Polymarket] Orderbook error: {e}")
+            return {}
+
+    def get_price_history(self, market_id: str, interval: str = "1d") -> pd.DataFrame:
+        """Returns price history for a market outcome (YES token)."""
+        try:
