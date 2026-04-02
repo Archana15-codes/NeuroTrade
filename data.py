@@ -707,3 +707,15 @@ class MacroFeatureBuilder:
 
         aligned = macro_df.reindex(price_df.index, method=method)
         return pd.concat([price_df, aligned], axis=1)
+
+    @staticmethod
+    def add_macro_features(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Adds derived macro features assuming standard FRED columns are present.
+        Call AFTER merge().
+        """
+        # Yield curve slope (2-10)
+        if "DGS10" in df and "DGS2" in df:
+            df["Yield_Curve"]     = df["DGS10"] - df["DGS2"]
+            df["Curve_Inverted"]  = (df["Yield_Curve"] < 0).astype(int)
+            df["Curve_MOM_1M"]    = df["Yield_Curve"].diff(21)
