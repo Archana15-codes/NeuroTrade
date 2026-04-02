@@ -719,3 +719,33 @@ class MacroFeatureBuilder:
             df["Yield_Curve"]     = df["DGS10"] - df["DGS2"]
             df["Curve_Inverted"]  = (df["Yield_Curve"] < 0).astype(int)
             df["Curve_MOM_1M"]    = df["Yield_Curve"].diff(21)
+
+        # ── Real rate ─────────────────────────────────────────────────
+        if "DGS10" in df and "T10YIE" in df:
+            df["Real_Rate_10Y"]   = df["DGS10"] - df["T10YIE"]
+
+        # ── Credit stress ─────────────────────────────────────────────
+        if "BAMLH0A0HYM2" in df:
+            df["HY_Spread_MOM"]   = df["BAMLH0A0HYM2"].diff(21)
+            df["HY_Spread_Z"]     = (
+                (df["BAMLH0A0HYM2"] - df["BAMLH0A0HYM2"].rolling(252).mean())
+                / df["BAMLH0A0HYM2"].rolling(252).std()
+            )
+
+        # ── Inflation momentum ────────────────────────────────────────
+        if "CPIAUCSL" in df:
+            df["CPI_YOY"]         = df["CPIAUCSL"].pct_change(252) * 100
+            df["CPI_MOM"]         = df["CPIAUCSL"].pct_change(21) * 100
+
+        # ── VIX regime ────────────────────────────────────────────────
+        if "VIXCLS" in df:
+            df["VIX_MA30"]        = df["VIXCLS"].rolling(30).mean()
+            df["VIX_Regime"]      = pd.cut(
+                df["VIXCLS"],
+                bins=[0, 15, 20, 30, 40, 999],
+                labels=["calm", "normal", "elevated", "fear", "panic"]
+            )
+
+        return df
+
+# MASTER DataPipeline  — one call to rule them all
