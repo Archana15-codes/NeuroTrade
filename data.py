@@ -662,3 +662,14 @@ class KalshiLoader:
         except Exception as e:
             print(f"[Kalshi] Error: {e}")
             return pd.DataFrame()
+
+    def get_market_history(self, ticker: str) -> pd.DataFrame:
+        try:
+            r = requests.get(
+                f"{self.BASE}/markets/{ticker}/history",
+                timeout=10
+            )
+            r.raise_for_status()
+            history = r.json().get("history", [])
+            df = pd.DataFrame(history)
+            if not df.empty:
