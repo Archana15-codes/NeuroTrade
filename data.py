@@ -580,3 +580,7 @@ class PolymarketLoader:
                     "yes_price":    None,
                     "no_price":     None,
                 })
+            return pd.DataFrame(rows)
+        except Exception as e:
+            print(f"[Polymarket] Error: {e}")
+            return pd.DataFrame()
