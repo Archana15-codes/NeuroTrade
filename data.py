@@ -602,3 +602,12 @@ class PolymarketLoader:
     def get_price_history(self, market_id: str, interval: str = "1d") -> pd.DataFrame:
         """Returns price history for a market outcome (YES token)."""
         try:
+            r = requests.get(
+                f"{self.BASE}/prices-history",
+                params={"market": market_id, "interval": interval, "fidelity": 60},
+                timeout=10
+            )
+            r.raise_for_status()
+            history = r.json().get("history", [])
+            df = pd.DataFrame(history)
+            if not df.empty:
