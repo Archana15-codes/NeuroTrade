@@ -123,9 +123,8 @@ def add_all_indicators_builtin(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     return df
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 #  STREAMLIT CONFIG
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 st.set_page_config(
     page_title="NeuroTrade",
