@@ -861,3 +861,14 @@ class DataPipeline:
             return PolymarketLoader().get_markets()
         else:
             raise ValueError(f"Unknown source: {source}")
+
+# Health check
+    @staticmethod
+    def validate(df: pd.DataFrame) -> None:
+        report = OHLCVCleaner.validate(df)
+        print("\n── DataFrame Health Report ──────────────────")
+        for k, v in report.items():
+            print(f"  {k:<22}: {v}")
+        print("─────────────────────────────────────────────\n")
+        
+# SYNTHETIC DATA GENERATOR  — for testing without API keys
