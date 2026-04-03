@@ -814,3 +814,12 @@ class DataPipeline:
 
         # 2. macro overlay
         if include_macro:
+            key = fred_key or CONFIG.fred_api_key
+            if key and _FRED_AVAILABLE:
+                try:
+                    fl = FREDLoader(key)
+                    series = macro_series or [
+                        "DFF", "DGS2", "DGS10", "T10Y2Y",
+                        "CPIAUCSL", "VIXCLS", "UNRATE",
+                        "BAMLH0A0HYM2", "T10YIE",
+                    ]
