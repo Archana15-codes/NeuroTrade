@@ -781,3 +781,11 @@ class DataPipeline:
         source:   str  = "yfinance",    # "yfinance" | "alphavantage"
         av_key:   str  = None,
     ) -> pd.DataFrame:
+        """Returns clean OHLCV df ready for indicators.py"""
+        if source == "yfinance":
+            return YFinanceLoader.fetch(ticker, start, end, interval)
+        elif source == "alphavantage":
+            key = av_key or CONFIG.alpha_vantage_key
+            return AlphaVantageLoader(key).fetch_daily(ticker)
+        else:
+            raise ValueError(f"Unknown source: {source}")
