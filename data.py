@@ -956,3 +956,18 @@ if __name__ == "__main__":
     df = SyntheticDataGenerator.generate(n_bars=1000, ticker="DEMO")
     DataPipeline.validate(df)
     print(df.tail(3).to_string())
+
+ # Plug into indicators 
+    print("\n[2] Adding all technical indicators…")
+    try:
+        from indicators import add_all_indicators
+        df = add_all_indicators(df)
+        print(f"  Columns after indicators: {len(df.columns)}")
+        print(f"  Indicator cols: {[c for c in df.columns if c not in ['Open','High','Low','Close','Volume']]}")
+    except ImportError:
+        print("  indicators.py not found — add manually or place in same folder")
+
+    # Run backtest
+    print("\n[3] Running backtest…")
+    try:
+        from backtester import (
