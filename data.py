@@ -772,3 +772,12 @@ class DataPipeline:
         bt = Backtester(BacktestConfig())
         results = bt.run(df, macd_crossover_signal)
     """
+    @staticmethod
+    def get_ohlcv(
+        ticker:   str,
+        start:    str  = CONFIG.default_start,
+        end:      str  = CONFIG.default_end,
+        interval: str  = "1d",
+        source:   str  = "yfinance",    # "yfinance" | "alphavantage"
+        av_key:   str  = None,
+    ) -> pd.DataFrame:
