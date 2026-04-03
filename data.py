@@ -943,3 +943,16 @@ class SyntheticDataGenerator:
         }, index=dates)
 
         return OHLCVCleaner.clean(df, ticker)
+
+# QUICK-START  — shows the full pipeline end-to-end
+
+if __name__ == "__main__":
+    print("\n" + "="*60)
+    print("  DATA PIPELINE — QUICK START DEMO")
+    print("="*60)
+
+    #Generate synthetic data (no API key needed)
+    print("\n[1] Generating synthetic OHLCV data…")
+    df = SyntheticDataGenerator.generate(n_bars=1000, ticker="DEMO")
+    DataPipeline.validate(df)
+    print(df.tail(3).to_string())
