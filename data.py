@@ -789,3 +789,17 @@ class DataPipeline:
             return AlphaVantageLoader(key).fetch_daily(ticker)
         else:
             raise ValueError(f"Unknown source: {source}")
+
+    @staticmethod
+    def get_full(
+        ticker:         str,
+        start:          str   = "2015-01-01",
+        end:            str   = CONFIG.default_end,
+        include_macro:  bool  = True,
+        macro_series:   list  = None,
+        fred_key:       str   = None,
+    ) -> pd.DataFrame:
+        """
+        Returns OHLCV + macro features merged into one df.
+        Pass directly to add_all_indicators() then Backtester.run().
+        """
