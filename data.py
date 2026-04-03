@@ -931,3 +931,15 @@ class SyntheticDataGenerator:
 
         # vol-correlated volume
         base_vol = 500_000
+        volume = (base_vol * (1 + 3 * (vol / vol.mean())) *
+                  np.abs(np.random.lognormal(0, 0.5, n_bars))).astype(int)
+
+        df = pd.DataFrame({
+            "Open":   open_,
+            "High":   high,
+            "Low":    low,
+            "Close":  close,
+            "Volume": volume,
+        }, index=dates)
+
+        return OHLCVCleaner.clean(df, ticker)
