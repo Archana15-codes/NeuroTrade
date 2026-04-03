@@ -984,3 +984,12 @@ if __name__ == "__main__":
             trailing_stop_pct = 0.025,
             risk_free_rate   = 0.06, 
         )
+        results = run_full_analysis(
+            df             = df,
+            signal_func    = macd_crossover_signal,
+            config         = config,
+            run_walk_forward = False,
+            run_monte_carlo  = True,
+        )
+    except ImportError:
+        print("  backtester.py not found — place in same folder")
