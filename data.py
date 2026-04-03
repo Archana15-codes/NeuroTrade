@@ -903,3 +903,17 @@ class SyntheticDataGenerator:
             {"mu": -0.0006, "sigma": 0.030},   # bear + high vol
             {"mu": 0.0006,  "sigma": 0.018},   # strong bull
         ]
+        for i, p in enumerate(regime_params[:n_regimes]):
+            regimes.extend([p] * regime_len)
+        while len(regimes) < n_bars:
+            regimes.append(regime_params[-1])
+
+        # GARCH-like vol clustering 
+        vol = np.zeros(n_bars)
+        vol[0] = regimes[0]["sigma"]
+        alpha, beta = 0.08, 0.88
+        for t in range(1, n_bars):
+            base_sigma = regimes[t]["sigma"]
+            shock = np.random.randn() * vol[t-1]
+            vol[t] = np.sqrt(alpha * shock**2 + beta * vol[t-1]**2 + (1-alpha-beta) * base_sigma**2)
+            vol[t] = np.clip(vol[t], 0.003, 0.08)
