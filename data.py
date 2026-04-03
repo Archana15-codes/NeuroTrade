@@ -749,3 +749,254 @@ class MacroFeatureBuilder:
         return df
 
 # MASTER DataPipeline  — one call to rule them all
+
+class DataPipeline:
+    """
+    Single entry point that wires everything together.
+
+    Usage:
+    ──────
+        from data import DataPipeline
+
+        # minimal — just OHLCV
+        df = DataPipeline.get_ohlcv("RELIANCE.NS", start="2020-01-01")
+
+        # with macro
+        df = DataPipeline.get_full("RELIANCE.NS", include_macro=True)
+
+        # then plug straight into your existing files
+        from indicators import add_all_indicators
+        df = add_all_indicators(df)
+
+        from backtester import Backtester, BacktestConfig, macd_crossover_signal
+        bt = Backtester(BacktestConfig())
+        results = bt.run(df, macd_crossover_signal)
+    """
+    @staticmethod
+    def get_ohlcv(
+        ticker:   str,
+        start:    str  = CONFIG.default_start,
+        end:      str  = CONFIG.default_end,
+        interval: str  = "1d",
+        source:   str  = "yfinance",    # "yfinance" | "alphavantage"
+        av_key:   str  = None,
+    ) -> pd.DataFrame:
+        """Returns clean OHLCV df ready for indicators.py"""
+        if source == "yfinance":
+            return YFinanceLoader.fetch(ticker, start, end, interval)
+        elif source == "alphavantage":
+            key = av_key or CONFIG.alpha_vantage_key
+            return AlphaVantageLoader(key).fetch_daily(ticker)
+        else:
+            raise ValueError(f"Unknown source: {source}")
+
+    @staticmethod
+    def get_full(
+        ticker:         str,
+        start:          str   = "2015-01-01",
+        end:            str   = CONFIG.default_end,
+        include_macro:  bool  = True,
+        macro_series:   list  = None,
+        fred_key:       str   = None,
+    ) -> pd.DataFrame:
+        """
+        Returns OHLCV + macro features merged into one df.
+        Pass directly to add_all_indicators() then Backtester.run().
+        """
+        print(f"\n{'='*55}")
+        print(f"  DataPipeline.get_full({ticker})")
+        print(f"  Period: {start} → {end}")
+        print(f"{'='*55}")
+
+        # 1. price data
+        df = YFinanceLoader.fetch(ticker, start, end)
+        print(f"  Price rows loaded: {len(df)}")
+
+        # 2. macro overlay
+        if include_macro:
+            key = fred_key or CONFIG.fred_api_key
+            if key and _FRED_AVAILABLE:
+                try:
+                    fl = FREDLoader(key)
+                    series = macro_series or [
+                        "DFF", "DGS2", "DGS10", "T10Y2Y",
+                        "CPIAUCSL", "VIXCLS", "UNRATE",
+                        "BAMLH0A0HYM2", "T10YIE",
+                    ]
+                    print(f"\n  Fetching {len(series)} FRED series…")
+                    macro = fl.fetch_macro_panel(series, start, end)
+                    df = MacroFeatureBuilder.merge(df, macro)
+                    df = MacroFeatureBuilder.add_macro_features(df)
+                    print(f"  Macro columns added: {macro.shape[1]}")
+                except Exception as e:
+                    print(f"  [FRED] Skipped: {e}")
+            else:
+                if not key:
+                    print("  [FRED] No API key — skipping macro. Set FRED_API_KEY env var.")
+                if not _FRED_AVAILABLE:
+                    print("  [FRED] fredapi not installed — pip install fredapi")
+
+        print(f"\n  Final df shape: {df.shape}")
+        print(f"  Columns: {list(df.columns)}\n")
+        return df
+
+    @staticmethod
+    def get_portfolio(
+        tickers: list,
+        start:   str = CONFIG.default_start,
+        end:     str = CONFIG.default_end,
+    ) -> dict:
+        """Returns {ticker: clean_df} for multi-asset backtesting."""
+        return YFinanceLoader.fetch_multiple(tickers, start, end)
+
+    @staticmethod
+    def get_prediction_markets(source: str = "kalshi") -> pd.DataFrame:
+        """
+        Returns live prediction market odds.
+        source: "kalshi" | "polymarket"
+        """
+        if source == "kalshi":
+            return KalshiLoader().get_markets()
+        elif source == "polymarket":
+            return PolymarketLoader().get_markets()
+        else:
+            raise ValueError(f"Unknown source: {source}")
+
+# Health check
+    @staticmethod
+    def validate(df: pd.DataFrame) -> None:
+        report = OHLCVCleaner.validate(df)
+        print("\n── DataFrame Health Report ──────────────────")
+        for k, v in report.items():
+            print(f"  {k:<22}: {v}")
+        print("─────────────────────────────────────────────\n")
+        
+# SYNTHETIC DATA GENERATOR  — for testing without API keys
+
+class SyntheticDataGenerator:
+    """
+    Generates realistic OHLCV data with regime changes, fat tails,
+    and autocorrelated volatility (GARCH-like).
+    Use this to test your pipeline before you have real data.
+    """
+
+    @staticmethod
+    def generate(
+        n_bars:       int   = 1000,
+        start_price:  float = 1000.0,
+        start_date:   str   = "2020-01-01",
+        freq:         str   = "B",         # B = business days
+        seed:         int   = 42,
+        ticker:       str   = "SYNTHETIC",
+        n_regimes:    int   = 4,            # number of volatility/trend regimes
+    ) -> pd.DataFrame:
+
+        np.random.seed(seed)
+        dates = pd.date_range(start_date, periods=n_bars, freq=freq)
+
+        # regime schedule 
+        regime_len = n_bars // n_regimes
+        regimes = []
+        regime_params = [
+            {"mu": 0.0004,  "sigma": 0.012},   # calm bull
+            {"mu": 0.0001,  "sigma": 0.025},   # choppy
+            {"mu": -0.0006, "sigma": 0.030},   # bear + high vol
+            {"mu": 0.0006,  "sigma": 0.018},   # strong bull
+        ]
+        for i, p in enumerate(regime_params[:n_regimes]):
+            regimes.extend([p] * regime_len)
+        while len(regimes) < n_bars:
+            regimes.append(regime_params[-1])
+
+        # GARCH-like vol clustering 
+        vol = np.zeros(n_bars)
+        vol[0] = regimes[0]["sigma"]
+        alpha, beta = 0.08, 0.88
+        for t in range(1, n_bars):
+            base_sigma = regimes[t]["sigma"]
+            shock = np.random.randn() * vol[t-1]
+            vol[t] = np.sqrt(alpha * shock**2 + beta * vol[t-1]**2 + (1-alpha-beta) * base_sigma**2)
+            vol[t] = np.clip(vol[t], 0.003, 0.08)
+
+        rets = np.array([regimes[t]["mu"] + vol[t] * np.random.standard_t(5)
+                         for t in range(n_bars)])
+        close = start_price * np.exp(np.cumsum(rets))
+
+        # OHLCV construction 
+        spread = vol * close * 0.5
+        high   = close + np.abs(np.random.normal(0, spread))
+        low    = close - np.abs(np.random.normal(0, spread))
+        open_  = np.roll(close, 1)
+        open_[0] = start_price
+
+        # vol-correlated volume
+        base_vol = 500_000
+        volume = (base_vol * (1 + 3 * (vol / vol.mean())) *
+                  np.abs(np.random.lognormal(0, 0.5, n_bars))).astype(int)
+
+        df = pd.DataFrame({
+            "Open":   open_,
+            "High":   high,
+            "Low":    low,
+            "Close":  close,
+            "Volume": volume,
+        }, index=dates)
+
+        return OHLCVCleaner.clean(df, ticker)
+
+# QUICK-START  — shows the full pipeline end-to-end
+
+if __name__ == "__main__":
+    print("\n" + "="*60)
+    print("  DATA PIPELINE — QUICK START DEMO")
+    print("="*60)
+
+    #Generate synthetic data (no API key needed)
+    print("\n[1] Generating synthetic OHLCV data…")
+    df = SyntheticDataGenerator.generate(n_bars=1000, ticker="DEMO")
+    DataPipeline.validate(df)
+    print(df.tail(3).to_string())
+
+ # Plug into indicators 
+    print("\n[2] Adding all technical indicators…")
+    try:
+        from indicators import add_all_indicators
+        df = add_all_indicators(df)
+        print(f"  Columns after indicators: {len(df.columns)}")
+        print(f"  Indicator cols: {[c for c in df.columns if c not in ['Open','High','Low','Close','Volume']]}")
+    except ImportError:
+        print("  indicators.py not found — add manually or place in same folder")
+
+    # Run backtest
+    print("\n[3] Running backtest…")
+    try:
+        from backtester import (
+        Backtester, BacktestConfig,
+            macd_crossover_signal, run_full_analysis
+        )
+        df.dropna(inplace=True)
+        config = BacktestConfig(
+            initial_capital   = 100_000,
+            commission_pct    = 0.001,
+            slippage_pct      = 0.0005,
+            stop_loss_pct     = 0.03,
+            take_profit_pct   = 0.06,
+            trailing_stop_pct = 0.025,
+            risk_free_rate   = 0.06, 
+        )
+        results = run_full_analysis(
+            df             = df,
+            signal_func    = macd_crossover_signal,
+            config         = config,
+            run_walk_forward = False,
+            run_monte_carlo  = True,
+        )
+    except ImportError:
+        print("  backtester.py not found — place in same folder")
+
+    # Fetch real data (requires yfinance) 
+    print("\n[4] Real data fetch example (requires yfinance):")
+    print("    df = DataPipeline.get_ohlcv('RELIANCE.NS', start='2020-01-01')")
+    print("    df = DataPipeline.get_full('AAPL', include_macro=True)")
+    print("    markets = DataPipeline.get_prediction_markets('kalshi')")
+    print("\nDone.")
