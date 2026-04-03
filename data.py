@@ -749,3 +749,26 @@ class MacroFeatureBuilder:
         return df
 
 # MASTER DataPipeline  — one call to rule them all
+
+class DataPipeline:
+    """
+    Single entry point that wires everything together.
+
+    Usage:
+    ──────
+        from data import DataPipeline
+
+        # minimal — just OHLCV
+        df = DataPipeline.get_ohlcv("RELIANCE.NS", start="2020-01-01")
+
+        # with macro
+        df = DataPipeline.get_full("RELIANCE.NS", include_macro=True)
+
+        # then plug straight into your existing files
+        from indicators import add_all_indicators
+        df = add_all_indicators(df)
+
+        from backtester import Backtester, BacktestConfig, macd_crossover_signal
+        bt = Backtester(BacktestConfig())
+        results = bt.run(df, macd_crossover_signal)
+    """
