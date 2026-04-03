@@ -894,7 +894,7 @@ class SyntheticDataGenerator:
         np.random.seed(seed)
         dates = pd.date_range(start_date, periods=n_bars, freq=freq)
 
-        # ── regime schedule ──────────────────────────────────────────
+        # regime schedule 
         regime_len = n_bars // n_regimes
         regimes = []
         regime_params = [
@@ -917,3 +917,17 @@ class SyntheticDataGenerator:
             shock = np.random.randn() * vol[t-1]
             vol[t] = np.sqrt(alpha * shock**2 + beta * vol[t-1]**2 + (1-alpha-beta) * base_sigma**2)
             vol[t] = np.clip(vol[t], 0.003, 0.08)
+
+        rets = np.array([regimes[t]["mu"] + vol[t] * np.random.standard_t(5)
+                         for t in range(n_bars)])
+        close = start_price * np.exp(np.cumsum(rets))
+
+        # OHLCV construction 
+        spread = vol * close * 0.5
+        high   = close + np.abs(np.random.normal(0, spread))
+        low    = close - np.abs(np.random.normal(0, spread))
+        open_  = np.roll(close, 1)
+        open_[0] = start_price
+
+        # vol-correlated volume
+        base_vol = 500_000
