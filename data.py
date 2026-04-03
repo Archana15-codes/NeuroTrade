@@ -872,3 +872,21 @@ class DataPipeline:
         print("─────────────────────────────────────────────\n")
         
 # SYNTHETIC DATA GENERATOR  — for testing without API keys
+
+class SyntheticDataGenerator:
+    """
+    Generates realistic OHLCV data with regime changes, fat tails,
+    and autocorrelated volatility (GARCH-like).
+    Use this to test your pipeline before you have real data.
+    """
+
+    @staticmethod
+    def generate(
+        n_bars:       int   = 1000,
+        start_price:  float = 1000.0,
+        start_date:   str   = "2020-01-01",
+        freq:         str   = "B",         # B = business days
+        seed:         int   = 42,
+        ticker:       str   = "SYNTHETIC",
+        n_regimes:    int   = 4,            # number of volatility/trend regimes
+    ) -> pd.DataFrame:
