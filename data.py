@@ -890,3 +890,16 @@ class SyntheticDataGenerator:
         ticker:       str   = "SYNTHETIC",
         n_regimes:    int   = 4,            # number of volatility/trend regimes
     ) -> pd.DataFrame:
+
+        np.random.seed(seed)
+        dates = pd.date_range(start_date, periods=n_bars, freq=freq)
+
+        # ── regime schedule ──────────────────────────────────────────
+        regime_len = n_bars // n_regimes
+        regimes = []
+        regime_params = [
+            {"mu": 0.0004,  "sigma": 0.012},   # calm bull
+            {"mu": 0.0001,  "sigma": 0.025},   # choppy
+            {"mu": -0.0006, "sigma": 0.030},   # bear + high vol
+            {"mu": 0.0006,  "sigma": 0.018},   # strong bull
+        ]
