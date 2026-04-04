@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NeuroTrade — AI Trading Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:        #050a08;
+  --bg2:       #080f0c;
+  --surface:   rgba(255,255,255,0.04);
+  --surface2:  rgba(255,255,255,0.07);
+  --border:    rgba(255,255,255,0.08);
+  --border2:   rgba(100,220,130,0.15);
+  --glow:      #1aff8c;
+  --glow2:     #0fcc6e;
+  --glow3:     #05a84e;
+  --text:      #f0f4f0;
+  --muted:     rgba(240,244,240,0.5);
+  --muted2:    rgba(240,244,240,0.3);
+  --head:      'DM Serif Display', serif;
+  --body:      'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ── Noise texture overlay ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ══════════════════════════════
+   NAV
+══════════════════════════════ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 52px;
+  background: rgba(5,10,8,0.75);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-icon {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--glow), var(--glow3));
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 0 20px rgba(26,255,140,0.3);
+}
+.brand-name {
+  font-family: var(--body);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.nav-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-center a {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.nav-center a:hover { color: var(--text); background: var(--surface); }
+.nav-center a .arr { font-size: 0.7rem; opacity: 0.5; }
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-outline {
+  font-family: var(--body);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  padding: 8px 20px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.btn-outline:hover { background: rgba(26,255,140,0.06); border-color: rgba(100,220,130,0.35); }
+
+.btn-fill {
+  font-family: var(--body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #020c07;
+  background: var(--glow);
+  border: none;
+  border-radius: 100px;
+  padding: 9px 22px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 24px rgba(26,255,140,0.35);
+}
+.btn-fill:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 0 36px rgba(26,255,140,0.5); }
+
+/* ══════════════════════════════
+   HERO
+══════════════════════════════ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 140px 32px 100px;
+  overflow: hidden;
+}
+
+/* Big green radial glow behind hero */
+.hero::before {
+  content: '';
+  position: absolute;
+  width: 900px; height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+    rgba(15,204,110,0.18) 0%,
+    rgba(5,168,78,0.10) 30%,
+    transparent 70%
+  );
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* Bottom green fade */
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 200px;
+  background: linear-gradient(to top, var(--bg) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(26,255,140,0.08);
+  border: 1px solid rgba(26,255,140,0.2);
+  border-radius: 100px;
+  padding: 7px 18px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--glow);
+  margin-bottom: 36px;
+  animation: fadeUp 0.5s ease both;
+}
+.tag-dot {
+  width: 6px; height: 6px;
+  background: var(--glow);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--glow);
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.hero h1 {
+  font-family: var(--head);
+  font-size: clamp(3rem, 7vw, 6rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 24px;
+  max-width: 760px;
+  animation: fadeUp 0.5s 0.1s ease both;
+}
+
+.hero p {
+  font-size: 1rem;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 460px;
+  margin-bottom: 44px;
+  font-weight: 300;
+  animation: fadeUp 0.5s 0.2s ease both;
+}
+
+.hero-btns {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  animation: fadeUp 0.5s 0.3s ease both;
+}
+
+/* ── Hero card / mockup ── */
+.hero-card {
+  position: relative;
+  margin-top: 72px;
+  width: 100%;
+  max-width: 820px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: linear-gradient(160deg, rgba(15,30,20,0.95) 0%, rgba(5,10,8,0.98) 100%);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(26,255,140,0.05),
+    0 40px 100px rgba(0,0,0,0.7),
+    0 0 120px rgba(15,204,110,0.08);
+  animation: fadeUp 0.6s 0.4s ease both;
+  z-index: 1;
+}
+
+.card-topbar {
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot-r { background: #ff5f57; }
+.dot-y { background: #febc2e; }
+.dot-g { background: #28c840; }
+.card-url {
+  margin-left: 10px;
+  font-size: 0.65rem;
+  color: var(--muted2);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 12px;
+  font-family: monospace;
+}
+
+.card-body { padding: 20px; }
+
+/* mini metric row */
+.mini-metrics {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.mm {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.mm-l { font-size: 0.55rem; color: var(--muted2); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.mm-v { font-size: 0.9rem; font-weight: 600; color: var(--glow); font-family: monospace; }
+.mm-v.red { color: #ff5f72; }
+.mm-v.gold { color: #ffd080; }
+
+/* SVG chart */
+.chart-svg { width: 100%; height: 180px; display: block; border-radius: 10px; overflow: hidden; }
+
+/* Signal badge */
+.signal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.sig-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.sig-buy { background: rgba(26,255,140,0.1); border: 1px solid rgba(26,255,140,0.3); color: var(--glow); }
+.sig-sell { background: rgba(255,69,102,0.1); border: 1px solid rgba(255,69,102,0.3); color: #ff5f72; }
+.sig-hold { background: rgba(255,208,80,0.1); border: 1px solid rgba(255,208,80,0.3); color: #ffd080; }
+
+/* ══════════════════════════════
+   LOGOS STRIP
+══════════════════════════════ */
+.logos-strip {
+  padding: 40px 52px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+}
+.logos-strip::before, .logos-strip::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 120px;
+  z-index: 2;
+}
+.logos-strip::before { left: 0; background: linear-gradient(to right, var(--bg), transparent); }
+.logos-strip::after  { right: 0; background: linear-gradient(to left, var(--bg), transparent); }
+
+.logos-track {
+  display: flex;
+  gap: 0;
+  animation: logos-scroll 28s linear infinite;
+  width: max-content;
+}
+.logo-item {
+  padding: 0 44px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted2);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  border-right: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.3s;
+}
+.logo-item:hover { color: var(--muted); }
+@keyframes logos-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ══════════════════════════════
+   SECTIONS
+══════════════════════════════ */
+.section-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 100px 52px;
+}
+
+/* ── Feature split layout ── */
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+.split.reverse { direction: rtl; }
+.split.reverse > * { direction: ltr; }
+
+.split-text .eyebrow {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--glow2);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.split-text h2 {
+  font-family: var(--head);
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+.split-text p {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 420px;
+  margin-bottom: 32px;
+}
+
+/* Accordion */
+.accordion { display: flex; flex-direction: column; gap: 8px; }
+.acc-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+.acc-item:hover { border-color: var(--border2); }
+.acc-item.open { border-color: rgba(26,255,140,0.25); }
+.acc-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+}
+.acc-icon { font-size: 1rem; }
+.acc-title { font-size: 0.88rem; font-weight: 500; flex: 1; }
+.acc-arr {
+  font-size: 0.75rem;
+  color: var(--muted2);
+  transition: transform 0.3s;
+}
+.acc-item.open .acc-arr { transform: rotate(90deg); color: var(--glow); }
+.acc-body {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.7;
+  padding: 0 20px 16px 44px;
+  display: none;
+}
+.acc-item.open .acc-body { display: block; }
+
+/* ── Visual / icon box ── */
+.visual-box {
+  position: relative;
+  aspect-ratio: 1;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visual-box::before {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(ellipse at center, rgba(15,204,110,0.14) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.icon-float {
+  position: relative;
+  width: 120px; height: 120px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(26,255,140,0.25), rgba(5,168,78,0.12));
+  border: 1px solid rgba(26,255,140,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  box-shadow:
+    0 0 0 1px rgba(26,255,140,0.08),
+    0 20px 60px rgba(0,0,0,0.5),
+    0 0 40px rgba(15,204,110,0.15);
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-12px) rotate(2deg); }
+}
+
+/* Grid lines decoration */
+.grid-deco {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(26,255,140,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26,255,140,0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Corner marks */
+.corner { position: absolute; width: 16px; height: 16px; }
+.corner.tl { top: 0; left: 0; border-top: 2px solid var(--glow2); border-left: 2px solid var(--glow2); }
+.corner.tr { top: 0; right: 0; border-top: 2px solid var(--glow2); border-right: 2px solid var(--glow2); }
+.corner.bl { bottom: 0; left: 0; border-bottom: 2px solid var(--glow2); border-left: 2px solid var(--glow2); }
+.corner.br { bottom: 0; right: 0; border-bottom: 2px solid var(--glow2); border-right: 2px solid var(--glow2); }
+
+/* Orbiting dots */
+.orb-ring {
+  position: absolute;
+  width: 240px; height: 240px;
+  border-radius: 50%;
+  border: 1px dashed rgba(26,255,140,0.1);
+  animation: spin 20s linear infinite;
+}
+.orb-dot {
+  position: absolute;
+  width: 8px; height: 8px;
+  background: var(--glow);
+  border-radius: 50%;
+  top: -4px; left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 10px var(--glow);
+}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════
+   BANNER: Faster. Smarter.
+══════════════════════════════ */
+.banner {
+  text-align: center;
+  padding: 100px 32px;
+  position: relative;
+  overflow: hidden;
+}
+.banner::before {
+  content: '';
+  position: absolute;
+  width: 700px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(15,204,110,0.12) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.banner h2 {
+  font-family: var(--head);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+.banner p { font-size: 0.9rem; color: var(--muted); max-width: 380px; margin: 0 auto; line-height: 1.7; }
+
+/* ══════════════════════════════
+   INDICATORS SECTION
+══════════════════════════════ */
+.ind-section {
+  padding: 80px 52px;
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+.ind-section h2 {
+  font-family: var(--head);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+.ind-section p { font-size: 0.88rem; color: var(--muted); max-width: 400px; margin: 0 auto 40px; line-height: 1.7; }
+
+.ind-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.ind-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  cursor: default;
+}
+.ind-chip:hover { border-color: var(--border2); color: var(--text); background: rgba(26,255,140,0.04); }
+.ind-chip .chip-dot { width: 5px; height: 5px; background: var(--glow3); border-radius: 50%; flex-shrink: 0; }
+
+/* ══════════════════════════════
+   CTA SECTION
+══════════════════════════════ */
+.cta-sec {
+  padding: 100px 32px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+}
+.cta-sec::before {
+  content: '';
+  position: absolute;
+  width: 800px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(15,204,110,0.14) 0%, transparent 70%);
+  bottom: -200px; left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.cta-sec h2 {
+  font-family: var(--head);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  margin-bottom: 20px;
+  position: relative;
+}
+.cta-sec p {
+  font-size: 0.9rem;
+  color: var(--muted);
+  max-width: 380px;
+  margin: 0 auto 44px;
+  line-height: 1.7;
+}
+.cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* ══════════════════════════════
+   FOOTER
+══════════════════════════════ */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 28px 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer-copy { font-size: 0.72rem; color: var(--muted2); }
+
+/* ══════════════════════════════
+   ANIMATIONS
+══════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.vis { opacity: 1; transform: none; }
+
+/* ══════════════════════════════
+   RESPONSIVE
+══════════════════════════════ */
+@media (max-width: 768px) {
+  nav { padding: 14px 20px; }
+  .nav-center { display: none; }
+  .split { grid-template-columns: 1fr; gap: 40px; }
+  .split.reverse { direction: ltr; }
+  .mini-metrics { grid-template-columns: repeat(3, 1fr); }
+  footer { flex-direction: column; gap: 8px; text-align: center; }
+  .section-wrap { padding: 60px 24px; }
+  .ind-section { padding: 60px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="brand-icon">⚡</div>
+    <span class="brand-name">NeuroTrade</span>
+  </div>
+
+  <div class="nav-center">
+    <a href="#features">About</a>
+    <a href="#indicators">Product <span class="arr">▾</span></a>
+    <a href="#cta">Resources <span class="arr">▾</span></a>
+  </div>
+
+  <div class="nav-right">
+    <a href="#" class="btn-outline">Get Started →</a>
+    <a href="#" class="btn-fill" onclick="tryNow(event)">Contact Sales</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">
+    <span class="tag-dot"></span>
+    Grow on Your Own Terms
+  </div>
+
+  <h1>The modern<br/>trading terminal</h1>
+
+  <p>We're eliminating the friction of manual analysis, connecting traders to institutional-grade signals and real-time market intelligence.</p>
+
+  <div class="hero-btns">
+    <a href="#" class="btn-outline" onclick="tryNow(event)">Get Started →</a>
+    <a href="#features" class="btn-fill">Try NeuroTrade</a>
+  </div>
+
+  <!-- Hero dashboard card -->
+  <div class="hero-card">
+    <div class="card-topbar">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+      <div class="card-url">neurotrade.app · AAPL · 6 Months</div>
+    </div>
+    <div class="card-body">
+      <div class="mini-metrics">
+        <div class="mm"><div class="mm-l">RSI</div><div class="mm-v">58.4</div></div>
+        <div class="mm"><div class="mm-l">MACD</div><div class="mm-v">0.821</div></div>
+        <div class="mm"><div class="mm-l">ADX</div><div class="mm-v">32.1</div></div>
+        <div class="mm"><div class="mm-l">ATR</div><div class="mm-v gold">3.42</div></div>
+        <div class="mm"><div class="mm-l">VWAP</div><div class="mm-v">184.6</div></div>
+        <div class="mm"><div class="mm-l">CCI</div><div class="mm-v red">−28.4</div></div>
+      </div>
+
+      <svg class="chart-svg" viewBox="0 0 780 160" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1aff8c" stop-opacity="0.2"/>
+            <stop offset="100%" stop-color="#1aff8c" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <!-- grid -->
+        <line x1="0" y1="40"  x2="780" y2="40"  stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="80"  x2="780" y2="80"  stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="0" y1="120" x2="780" y2="120" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+        <line x1="130" y1="0" x2="130" y2="160" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+        <line x1="260" y1="0" x2="260" y2="160" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+        <line x1="390" y1="0" x2="390" y2="160" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+        <line x1="520" y1="0" x2="520" y2="160" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+        <line x1="650" y1="0" x2="650" y2="160" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+        <!-- BB bands -->
+        <path d="M0,30 Q120,22 240,38 Q360,48 480,34 Q600,22 780,28 L780,90 Q600,84 480,96 Q360,106 240,96 Q120,84 0,88Z" fill="rgba(26,255,140,0.05)" stroke="none"/>
+        <path d="M0,30 Q120,22 240,38 Q360,48 480,34 Q600,22 780,28" fill="none" stroke="rgba(26,255,140,0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+        <path d="M0,88 Q120,84 240,96 Q360,106 480,96 Q600,84 780,88" fill="none" stroke="rgba(26,255,140,0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+        <!-- Area -->
+        <path d="M0,100 Q80,92 160,78 Q240,64 320,74 Q400,52 480,58 Q560,46 640,50 Q710,44 780,40 L780,160 L0,160Z" fill="url(#g1)"/>
+        <!-- SMA -->
+        <path d="M0,104 Q150,95 300,82 Q450,72 600,65 Q700,62 780,58" fill="none" stroke="rgba(255,208,80,0.5)" stroke-width="1.2" stroke-dasharray="5,4"/>
+        <!-- Price -->
+        <path d="M0,100 Q80,92 160,78 Q240,64 320,74 Q400,52 480,58 Q560,46 640,50 Q710,44 780,40" fill="none" stroke="#1aff8c" stroke-width="2"/>
+        <!-- Buy signals -->
+        <polygon points="320,76 313,92 327,92" fill="#1aff8c"/>
+        <polygon points="640,52 633,68 647,68" fill="#1aff8c"/>
+        <!-- Sell -->
+        <polygon points="480,46 473,30 487,30" fill="#ff5f72"/>
+        <!-- Candles at end -->
+        <rect x="710" y="38" width="8" height="14" fill="rgba(26,255,140,0.8)" rx="1"/>
+        <line x1="714" y1="34" x2="714" y2="38" stroke="#1aff8c" stroke-width="1"/>
+        <rect x="724" y="33" width="8" height="16" fill="rgba(255,95,114,0.8)" rx="1"/>
+        <line x1="728" y1="28" x2="728" y2="33" stroke="#ff5f72" stroke-width="1"/>
+        <rect x="738" y="29" width="8" height="14" fill="rgba(26,255,140,0.8)" rx="1"/>
+        <line x1="742" y1="24" x2="742" y2="29" stroke="#1aff8c" stroke-width="1"/>
+        <rect x="752" y="25" width="8" height="18" fill="rgba(26,255,140,0.8)" rx="1"/>
+        <line x1="756" y1="20" x2="756" y2="25" stroke="#1aff8c" stroke-width="1"/>
+        <rect x="766" y="21" width="8" height="15" fill="rgba(255,95,114,0.8)" rx="1"/>
+        <line x1="770" y1="17" x2="770" y2="21" stroke="#ff5f72" stroke-width="1"/>
+      </svg>
+
+      <div class="signal-row">
+        <div class="sig-pill sig-buy">▲ BUY Signal</div>
+        <div class="sig-pill sig-hold">— RSI Neutral 58.4</div>
+        <div class="sig-pill sig-buy">⚡ MACD Bullish Cross</div>
+        <div class="sig-pill sig-buy">💪 ADX Strong Trend</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOGOS -->
+<div class="logos-strip">
+  <div class="logos-track" id="logosTrack"></div>
+</div>
+
+<!-- SPLIT FEATURE 1 -->
+<div class="section-wrap" id="features">
+  <div class="split reveal">
+    <div class="split-text">
+      <p class="eyebrow">The intelligence-first terminal</p>
+      <h2>Analyze smarter<br/>with our signals</h2>
+      <p>Outcome-focused analysis built on 14+ technical indicators. Every signal is scored across momentum, trend, and mean-reversion dimensions before reaching your screen.</p>
+
+      <div class="accordion">
+        <div class="acc-item open" onclick="toggleAcc(this)">
+          <div class="acc-header">
+            <span class="acc-icon">📈</span>
+            <span class="acc-title">Multi-indicator signal scoring</span>
+            <span class="acc-arr">›</span>
+          </div>
+          <div class="acc-body">RSI, MACD, ADX, Bollinger Bands and more are combined into a unified BUY / HOLD / SELL verdict — weighted by trend strength and momentum confluence.</div>
+        </div>
+        <div class="acc-item" onclick="toggleAcc(this)">
+          <div class="acc-header">
+            <span class="acc-icon">🧠</span>
+            <span class="acc-title">AI insight narratives</span>
+            <span class="acc-arr">›</span>
+          </div>
+          <div class="acc-body">Each indicator fires a contextual insight card explaining what it means in plain language — so you understand the market, not just the number.</div>
+        </div>
+        <div class="acc-item" onclick="toggleAcc(this)">
+          <div class="acc-header">
+            <span class="acc-icon">⚡</span>
+            <span class="acc-title">Real-time market data</span>
+            <span class="acc-arr">›</span>
+          </div>
+          <div class="acc-body">Live OHLCV data via yfinance for stocks, ETFs, crypto, and NSE/BSE tickers. Data refreshes every 5 minutes with configurable intervals from 15m to 1wk.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="visual-box">
+      <div class="grid-deco"></div>
+      <div class="corner tl"></div>
+      <div class="corner tr"></div>
+      <div class="corner bl"></div>
+      <div class="corner br"></div>
+      <div class="orb-ring"><div class="orb-dot"></div></div>
+      <div class="icon-float">📊</div>
+    </div>
+  </div>
+</div>
+
+<!-- BANNER -->
+<div class="banner reveal">
+  <h2>Faster. Smarter.</h2>
+  <p>Reduce chart-reading time, sharpen your entries, and facilitate better trading decisions — all in one terminal.</p>
+</div>
+
+<!-- SPLIT FEATURE 2 -->
+<div class="section-wrap">
+  <div class="split reverse reveal">
+    <div class="split-text">
+      <p class="eyebrow">Optimized for precision</p>
+      <h2>Every indicator.<br/>One place.</h2>
+      <p>Designed with a focus on analytical depth, NeuroTrade brings institutional-grade overlays — Bollinger Bands, VWAP, ADX with DI lines — into a clean, configurable UI.</p>
+      <div style="margin-top:8px;">
+        <a href="#indicators" class="btn-outline" style="display:inline-flex;align-items:center;gap:8px;">Learn More &nbsp;›</a>
+      </div>
+    </div>
+
+    <div class="visual-box">
+      <div class="grid-deco"></div>
+      <div class="corner tl"></div>
+      <div class="corner tr"></div>
+      <div class="corner bl"></div>
+      <div class="corner br"></div>
+      <!-- Stacked card visual -->
+      <div style="position:relative; width:200px;">
+        <div style="position:absolute;top:30px;left:30px;right:-30px;height:160px;background:rgba(26,255,140,0.04);border:1px solid rgba(26,255,140,0.1);border-radius:14px;transform:rotate(6deg);"></div>
+        <div style="position:absolute;top:15px;left:15px;right:-15px;height:160px;background:rgba(26,255,140,0.06);border:1px solid rgba(26,255,140,0.15);border-radius:14px;transform:rotate(3deg);"></div>
+        <div style="position:relative;background:rgba(12,28,18,0.95);border:1px solid rgba(26,255,140,0.25);border-radius:14px;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+          <div style="font-size:0.6rem;color:var(--glow2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Signal Breakdown</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:0.75rem;color:var(--muted);">MACD</span>
+              <span style="font-size:0.75rem;color:var(--glow);font-family:monospace;">▲ Bull</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:0.75rem;color:var(--muted);">RSI</span>
+              <span style="font-size:0.75rem;color:#ffd080;font-family:monospace;">● Neutral</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:0.75rem;color:var(--muted);">ADX</span>
+              <span style="font-size:0.75rem;color:var(--glow);font-family:monospace;">▲ Strong</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:0.75rem;color:var(--muted);">BB</span>
+              <span style="font-size:0.75rem;color:var(--muted2);font-family:monospace;">— Within</span>
+            </div>
+          </div>
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:0.7rem;color:var(--muted);">Verdict</span>
+              <span style="font-size:0.85rem;font-weight:700;color:var(--glow);">BUY</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INDICATORS -->
+<div class="ind-section reveal" id="indicators">
+  <p class="eyebrow" style="font-size:0.72rem;font-weight:500;color:var(--glow2);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:14px;">Built-in Library</p>
+  <h2>Every tool a trader needs.</h2>
+  <p>14 indicators computed natively, rendered as overlays, sub-panels, and insight cards.</p>
+  <div class="ind-grid">
+    <div class="ind-chip"><span class="chip-dot"></span> SMA</div>
+    <div class="ind-chip"><span class="chip-dot"></span> EMA</div>
+    <div class="ind-chip"><span class="chip-dot"></span> MACD</div>
+    <div class="ind-chip"><span class="chip-dot"></span> RSI</div>
+    <div class="ind-chip"><span class="chip-dot"></span> Bollinger Bands</div>
+    <div class="ind-chip"><span class="chip-dot"></span> ATR</div>
+    <div class="ind-chip"><span class="chip-dot"></span> ADX</div>
+    <div class="ind-chip"><span class="chip-dot"></span> +DI / −DI</div>
+    <div class="ind-chip"><span class="chip-dot"></span> CCI</div>
+    <div class="ind-chip"><span class="chip-dot"></span> Stochastic %K/%D</div>
+    <div class="ind-chip"><span class="chip-dot"></span> OBV</div>
+    <div class="ind-chip"><span class="chip-dot"></span> VWAP</div>
+    <div class="ind-chip"><span class="chip-dot"></span> Volume Overlay</div>
+    <div class="ind-chip"><span class="chip-dot"></span> Buy / Sell Signals</div>
+  </div>
+</div>
+
+<!-- CTA -->
+<section class="cta-sec reveal" id="cta">
+  <h2>Ready to trade<br/>with an edge?</h2>
+  <p>No signup. No credit card. Just open the terminal and start reading the market in seconds.</p>
+  <div class="cta-btns">
+    <a href="#" class="btn-outline" onclick="tryNow(event)">Get Started →</a>
+    <a href="#" class="btn-fill" onclick="tryNow(event)">⚡ &nbsp;Try Now — It's Free</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="nav-brand">
+    <div class="brand-icon">⚡</div>
+    <div>
+      <div class="brand-name">NeuroTrade</div>
+      <div style="font-size:0.58rem;color:var(--muted2);letter-spacing:0.12em;text-transform:uppercase;margin-top:1px;">AI Trading Terminal</div>
+    </div>
+  </div>
+  <div class="footer-copy">For educational purposes only · Not financial advice · © 2025 NeuroTrade</div>
+</footer>
+
+<script>
+// ── Logos ──────────────────────────────────────────────────────────────
+const logos = [
+  "📊 AAPL", "₿ BTC-USD", "🟦 MSFT", "🚀 NVDA",
+  "⚡ TSLA", "Ξ ETH-USD", "🔵 GOOGL", "📦 AMZN",
+  "🌐 META", "☀️ SOL-USD", "🇮🇳 RELIANCE.NS", "💻 TCS.NS",
+  "🔴 AMD", "🥇 GLD", "📈 SPY",
+];
+(function buildLogos() {
+  const track = document.getElementById('logosTrack');
+  const items = [...logos, ...logos].map(l =>
+    `<div class="logo-item">${l}</div>`
+  ).join('');
+  track.innerHTML = items;
+})();
+
+// ── Accordion ──────────────────────────────────────────────────────────
+function toggleAcc(item) {
+  const parent = item.closest('.accordion');
+  parent.querySelectorAll('.acc-item').forEach(i => i.classList.remove('open'));
+  item.classList.add('open');
+}
+
+// ── Scroll reveal ──────────────────────────────────────────────────────
+const io = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      e.target.style.transitionDelay = (i * 0.07) + 's';
+      e.target.classList.add('vis');
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// ── Try Now ──────────────────────────────────────────────────────────
+function tryNow(e) {
+  e.preventDefault();
+  // Replace with your Streamlit URL:
+  // window.location.href = 'http://localhost:8501';
+  const btn = e.currentTarget;
+  const orig = btn.innerHTML;
+  btn.innerHTML = '✅ &nbsp;Launching...';
+  btn.style.pointerEvents = 'none';
+  setTimeout(() => { btn.innerHTML = orig; btn.style.pointerEvents = ''; }, 2000);
+}
+</script>
+</body>
+</html>
