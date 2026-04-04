@@ -22,3 +22,10 @@ except ImportError:
     _TORCH = False
     DEVICE = None
     print("[dl_models] PyTorch not found — pip install torch")
+try:
+    from sklearn.preprocessing import RobustScaler
+    from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+    _SKL = True
+except ImportError:
+    _SKL = False
+    print("[dl_models] scikit-learn not found — pip install scikit-learn")
