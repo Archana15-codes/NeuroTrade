@@ -34,3 +34,12 @@ class Regime(str, Enum):
     BEAR = "BEAR"
     VOLATILE = "VOLATILE"
     UNKNOWN = "UNKNOWN"   # emitted when a row cannot be classified
+# Features consumed from the upstream indicators.py pipeline
+REQUIRED_FEATURES: list[str] = ["returns", "rsi", "volatility", "ma_diff"]
+
+# Default model backend
+DEFAULT_BACKEND: str = "kmeans"  # or "hmm"
+
+# KMeans default config
+KMEANS_N_CLUSTERS: int = 3
+RANDOM_STATE: int = 42
