@@ -28,3 +28,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Constants
+class Regime(str, Enum):
+    """Enumeration of supported market regimes."""
+    BULL = "BULL"
+    BEAR = "BEAR"
+    VOLATILE = "VOLATILE"
+    UNKNOWN = "UNKNOWN"   # emitted when a row cannot be classified
