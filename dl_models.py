@@ -199,3 +199,17 @@ class DLFeatureEngineer:
             y.append(values[i: i + H, tidx])    # (forecast_horizon,)
 
         return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)
+
+#  PYTORCH DATASET
+
+class TimeSeriesDataset(Dataset):
+    """Minimal wrapper around numpy arrays for DataLoader."""
+
+    def __init__(self, X: np.ndarray, y: np.ndarray):
+        self.X = torch.from_numpy(X)   # (N, T, F)
+        self.y = torch.from_numpy(y)   # (N, H)
+
+    def __len__(self): return len(self.X)
+
+    def __getitem__(self, idx):
+        return self.X[idx], self.y[idx]
