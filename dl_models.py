@@ -356,3 +356,18 @@ class TCNModel(nn.Module if _TORCH else object):
         x = self.network(x)             # (B, C, T)
         x = x.mean(dim=-1)              # (B, C)   — global avg pool
         return self.head(x), None       # (B, horizon), no attention
+
+#  MODEL 3 — TEMPORAL FUSION TRANSFORMER (TFT)
+
+class _GRN(nn.Module if _TORCH else object):
+    """Gated Residual Network — core building block of TFT."""
+
+    def __init__(self, d: int, d_out: int = None, dropout: float = 0.1):
+        super().__init__()
+        d_out = d_out or d
+        self.fc1  = nn.Linear(d, d)
+        self.fc2  = nn.Linear(d, d_out)
+        self.gate = nn.Linear(d, d_out)
+        self.norm = nn.LayerNorm(d_out)
+        self.drop = nn.Dropout(dropout)
+        self.skip = nn.Linear(d, d_out) if d != d_out else nn.Identity()
