@@ -258,3 +258,11 @@ class LSTMAttention(nn.Module if _TORCH else object):
             nn.Dropout(cfg.dropout),
             nn.Linear(H, cfg.forecast_horizon),
         )
+
+    def forward(self, x: "torch.Tensor") -> Tuple["torch.Tensor", "torch.Tensor"]:
+        out, _ = self.lstm(x)                       # (B, T, 2H)
+        score  = self.attn_v(torch.tanh(self.attn_w(out)))   # (B, T, 1)
+        weight = F.softmax(score, dim=1)            # (B, T, 1)
+        context = (weight * out).sum(dim=1)         # (B, 2H)
+        context = self.drop(self.norm(context))
+        return self.head(context), weight.squeeze(-1)   # (B, H), (B, T)
