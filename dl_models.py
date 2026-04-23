@@ -213,3 +213,28 @@ class TimeSeriesDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]
+
+#  MODEL 1 — BIDIRECTIONAL LSTM WITH ATTENTION
+
+class LSTMAttention(nn.Module if _TORCH else object):
+    """
+    Bidirectional multi-layer LSTM with a Bahdanau-style additive attention
+    mechanism over the temporal dimension, followed by a feedforward head.
+
+    Architecture
+    ────────────
+    Input  (B, T, F)
+    │
+    ├─ BiLSTM x n_layers  →  (B, T, 2H)
+    ├─ Attention  →  context  (B, 2H)
+    ├─ LayerNorm + Dropout
+    ├─ FC 2H → H → forecast_horizon
+    └─ Output  (B, horizon)
+    """
+
+    def __init__(self, n_features: int, cfg: DLConfig):
+        super().__init__()
+        self.cfg = cfg
+        H        = cfg.lstm_hidden
+        bidir    = cfg.lstm_bidir
+        dirs     = 2 if bidir else 1
