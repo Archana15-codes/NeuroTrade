@@ -698,3 +698,21 @@ class DLTrainer:
             return TFTModel(n_features, cfg)
         else:
             raise ValueError(f"Unknown model type: {model_type}")
+
+    def _train_epoch(self, dl, optimizer, scheduler, is_tft: bool) -> float:
+        self.model.train()
+        total = 0.0
+        for xb, yb in dl:
+            xb, yb = xb.to(DEVICE), yb.to(DEVICE)
+            optimizer.zero_grad()
+            out, _ = self.model(xb)
+            if is_tft:
+                loss = quantile_loss(out, yb, self.cfg.tft_quantiles)
+            else:
+                loss = F.mse_loss(out, yb)
+            loss.backward()
+            nn.utils.clip_grad_norm_(self.model.parameters(), self.cfg.grad_clip)
+            optimizer.step()
+            scheduler.step()
+            total += loss.item() * len(xb)
+        return total / len(dl.dataset)
