@@ -23,9 +23,8 @@ except Exception:
     SHAP_AVAILABLE = False
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 #  1. SHAP Explainer
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 class SHAPExplainer:
     """Compute SHAP values for a trained model.
