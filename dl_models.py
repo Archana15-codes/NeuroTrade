@@ -371,3 +371,22 @@ class _GRN(nn.Module if _TORCH else object):
         self.norm = nn.LayerNorm(d_out)
         self.drop = nn.Dropout(dropout)
         self.skip = nn.Linear(d, d_out) if d != d_out else nn.Identity()
+
+    def forward(self, x):
+        h   = F.gelu(self.fc1(x))
+        h   = self.drop(h)
+        eta = self.fc2(h)
+        sig = torch.sigmoid(self.gate(h))
+        out = self.norm(eta * sig + self.skip(x))
+        return out
+
+
+class _VSN(nn.Module if _TORCH else object):
+    """Variable Selection Network — learns per-feature importance weights."""
+
+    def __init__(self, n_features: int, d: int, dropout: float):
+        super().__init__()
+        self.feature_grns = nn.ModuleList([_GRN(1, d, dropout) for _ in range(n_features)])
+        self.select_grn   = _GRN(n_features, n_features, dropout)
+
+    def forward(self, x: "torch.Tensor") -> Tuple["torch.Tensor", "torch.Tensor"]:
