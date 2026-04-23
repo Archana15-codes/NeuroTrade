@@ -86,3 +86,16 @@ CURATED_FEATURES = [
     "OBV", "VWAP", "CCI", "%K", "%D",
     "Realized_Vol_21", "Z_Score_20",
 ]
+
+#  FEATURE ENGINEER
+
+class DLFeatureEngineer:
+    """
+    Transforms an indicator-enriched OHLCV DataFrame into scaled numpy arrays
+    ready for PyTorch training.
+
+    Usage
+    -----
+        eng = DLFeatureEngineer(cfg)
+        X, y, scaler = eng.build(df)
+    """
