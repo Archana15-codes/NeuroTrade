@@ -418,3 +418,17 @@ class TFTModel(nn.Module if _TORCH else object):
     ├─ Pool last H positions or global
     └─ Quantile output head (3 quantiles)  →  (B, H, 3)  or point (B, H)
     """
+    def __init__(self, n_features: int, cfg: DLConfig):
+        super().__init__()
+        self.cfg  = cfg
+        d         = cfg.tft_d_model
+        nh        = cfg.tft_n_heads
+        drop      = cfg.dropout
+        H         = cfg.forecast_horizon
+        nq        = len(cfg.tft_quantiles)
+
+        self.vsn  = _VSN(n_features, d, drop)
+        self.lstm_enc = nn.LSTM(d, d, cfg.tft_n_layers,
+                                batch_first=True, dropout=drop if cfg.tft_n_layers > 1 else 0.0)
+        self.gate_enc = nn.Sequential(nn.Linear(d, d), nn.Sigmoid())
+        self.norm_enc = nn.LayerNorm(d)
