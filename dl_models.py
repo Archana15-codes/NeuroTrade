@@ -297,3 +297,31 @@ class _TCNBlock(nn.Module if _TORCH else object):
         )
         self.downsample = nn.Conv1d(in_ch, out_ch, 1) if in_ch != out_ch else None
         self.norm = nn.LayerNorm(out_ch)
+
+        def forward(self, x):
+        res = x if self.downsample is None else self.downsample(x)
+        out = self.net(x) + res
+        # LayerNorm over channel dim: transpose → norm → transpose
+        return self.norm(out.transpose(1, 2)).transpose(1, 2)
+
+
+class TCNModel(nn.Module if _TORCH else object):
+    """
+    Temporal Convolutional Network for time-series forecasting.
+
+    Architecture
+    ────────────
+    Input (B, T, F)  →  transpose  →  (B, F, T)
+    │
+    ├─ TCNBlock(dilation=1)
+    ├─ TCNBlock(dilation=2)
+    ├─ TCNBlock(dilation=4)
+    ├─ TCNBlock(dilation=8)
+    ├─ TCNBlock(dilation=16)
+    │
+    ├─ Global Average Pool  →  (B, C_last)
+    └─ FC head  →  (B, horizon)
+
+    Receptive field = 1 + 2 * (kernel-1) * (2^n_layers - 1)
+    For kernel=3, 5 dilations: RF = 97 bars  ✓
+    """
