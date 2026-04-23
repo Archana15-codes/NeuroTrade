@@ -173,3 +173,13 @@ class DLFeatureEngineer:
             num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
             cols = [c for c in num_cols if c != "Ticker"]
         return df[cols].copy()
+
+    @staticmethod
+    def _add_time_features(data: pd.DataFrame, df: pd.DataFrame) -> pd.DataFrame:
+        idx = df.index
+        data = data.copy()
+        data["DayOfWeek"]   = idx.dayofweek.astype(np.float32) / 4.0
+        data["Month"]       = (idx.month.astype(np.float32) - 1) / 11.0
+        data["Quarter"]     = (idx.quarter.astype(np.float32) - 1) / 3.0
+        data["DayOfYear"]   = idx.dayofyear.astype(np.float32) / 365.0
+        return data
