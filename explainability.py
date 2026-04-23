@@ -146,7 +146,7 @@ class SHAPExplainer:
             "X": X,
         }
 
-    # ── global_importance ────────────────────────────────────────────────
+    # global_importance 
     def global_importance(self, top_n: int = 10) -> pd.DataFrame:
         """Mean |SHAP| per feature, sorted descending."""
         if self._shap_values is None:
