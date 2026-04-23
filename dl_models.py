@@ -116,3 +116,15 @@ class DLFeatureEngineer:
         y : (n_samples, forecast_horizon)
         cols : list of feature column names
         """
+        if not _SKL:
+            raise ImportError("scikit-learn required — pip install scikit-learn")
+
+        data = self._select_features(df)
+        data = self._add_time_features(data, df)
+        data = data.dropna()
+
+        self.feature_cols = list(data.columns)
+
+        # identify target column index (used to invert scale later)
+        tgt = self._target_col()
+        self.target_idx = self.feature_cols.index(tgt) if tgt in self.feature_cols else 3  # Close fallback
