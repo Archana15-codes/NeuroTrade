@@ -238,3 +238,23 @@ class LSTMAttention(nn.Module if _TORCH else object):
         H        = cfg.lstm_hidden
         bidir    = cfg.lstm_bidir
         dirs     = 2 if bidir else 1
+
+        self.lstm = nn.LSTM(
+            input_size=n_features,
+            hidden_size=H,
+            num_layers=cfg.lstm_layers,
+            batch_first=True,
+            dropout=cfg.dropout if cfg.lstm_layers > 1 else 0.0,
+            bidirectional=bidir,
+        )
+        self.attn_w = nn.Linear(dirs * H, dirs * H, bias=False)
+        self.attn_v = nn.Linear(dirs * H, 1, bias=False)
+
+        self.norm    = nn.LayerNorm(dirs * H)
+        self.drop    = nn.Dropout(cfg.dropout)
+        self.head    = nn.Sequential(
+            nn.Linear(dirs * H, H),
+            nn.GELU(),
+            nn.Dropout(cfg.dropout),
+            nn.Linear(H, cfg.forecast_horizon),
+        )
