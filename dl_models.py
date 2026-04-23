@@ -154,3 +154,22 @@ class DLFeatureEngineer:
         data = self._add_time_features(data, df)
         data = data.dropna()
         # align to fitted columns
+        for c in self.feature_cols:
+            if c not in data.columns:
+                data[c] = 0.0
+        data = data[self.feature_cols]
+        return self.scaler.transform(data.values.astype(np.float32))
+
+    # private 
+
+    def _target_col(self) -> str:
+        mapping = {"returns": "Returns", "log_returns": "Log_Returns", "close": "Close"}
+        return mapping.get(self.cfg.target, "Returns")
+
+    def _select_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        if self.cfg.feature_set == "curated":
+            cols = [c for c in CURATED_FEATURES if c in df.columns]
+        else:
+            num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            cols = [c for c in num_cols if c != "Ticker"]
+        return df[cols].copy()
