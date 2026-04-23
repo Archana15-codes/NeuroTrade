@@ -597,3 +597,27 @@ class DLTrainer:
                 if patience_ctr >= cfg.patience:
                     print(f"  Early stop at epoch {epoch} (best={best_epoch})")
                     break
+            if epoch % 10 == 0 or epoch == 1:
+                print(f"  Epoch {epoch:>4}/{cfg.epochs} | "
+                      f"train={tr_loss:.5f}  val={vl_loss:.5f}  "
+                      f"best_val={best_val:.5f}")
+
+        # Restore best & evaluate
+        if self._best_state:
+            self.model.load_state_dict({k: v.to(DEVICE) for k, v in self._best_state.items()})
+
+        metrics = self._evaluate(X_te, y_te, is_tft)
+
+        # Save model
+        path = self._save(model_type, n_features)
+
+        return TrainingResult(
+            model_type   = model_type.value,
+            train_losses = train_losses,
+            val_losses   = val_losses,
+            best_epoch   = best_epoch,
+            metrics      = metrics,
+            model_path   = path,
+            duration_sec = time.time() - t0,
+            n_params     = n_params,
+        )
