@@ -342,3 +342,17 @@ class TCNModel(nn.Module if _TORCH else object):
         # additional dilated layers if more dilations than channels
         for dil in dilations[len(channels):]:
             layers.append(_TCNBlock(in_ch, in_ch, kernel, dil, cfg.dropout))
+
+        self.network = nn.Sequential(*layers)
+        self.head = nn.Sequential(
+            nn.Linear(in_ch, in_ch // 2),
+            nn.GELU(),
+            nn.Dropout(cfg.dropout),
+            nn.Linear(in_ch // 2, cfg.forecast_horizon),
+        )
+
+    def forward(self, x: "torch.Tensor") -> Tuple["torch.Tensor", None]:
+        x = x.transpose(1, 2)           # (B, F, T)
+        x = self.network(x)             # (B, C, T)
+        x = x.mean(dim=-1)              # (B, C)   — global avg pool
+        return self.head(x), None       # (B, horizon), no attention
