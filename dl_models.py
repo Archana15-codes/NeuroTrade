@@ -139,3 +139,18 @@ class DLFeatureEngineer:
 
         X, y = self._make_windows(values)
         return X, y, self.feature_cols
+
+    def inverse_target(self, y_scaled: np.ndarray) -> np.ndarray:
+        """Invert scaling on the target column only."""
+        if self.scaler is None:
+            return y_scaled
+        dummy = np.zeros((y_scaled.shape[0], len(self.feature_cols)), dtype=np.float32)
+        dummy[:, self.target_idx] = y_scaled[:, 0]
+        return self.scaler.inverse_transform(dummy)[:, self.target_idx]
+
+    def transform(self, df: pd.DataFrame) -> np.ndarray:
+        """Transform new data using the already-fitted scaler."""
+        data = self._select_features(df)
+        data = self._add_time_features(data, df)
+        data = data.dropna()
+        # align to fitted columns
