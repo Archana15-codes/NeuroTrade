@@ -716,3 +716,44 @@ class DLTrainer:
             scheduler.step()
             total += loss.item() * len(xb)
         return total / len(dl.dataset)
+
+    @torch.no_grad()
+    def _eval_epoch(self, dl, is_tft: bool) -> float:
+        self.model.eval()
+        total = 0.0
+        for xb, yb in dl:
+            xb, yb = xb.to(DEVICE), yb.to(DEVICE)
+            out, _ = self.model(xb)
+            if is_tft:
+                loss = quantile_loss(out, yb, self.cfg.tft_quantiles)
+            else:
+                loss = F.mse_loss(out, yb)
+            total += loss.item() * len(xb)
+        return total / len(dl.dataset)
+
+    @torch.no_grad()
+    def _evaluate(self, X_te: np.ndarray, y_te: np.ndarray,
+                  is_tft: bool) -> Dict:
+        self.model.eval()
+        ds    = TimeSeriesDataset(X_te, y_te)
+        dl    = DataLoader(ds, batch_size=128, shuffle=False)
+        preds, actuals = [], []
+
+        for xb, yb in dl:
+            xb = xb.to(DEVICE)
+            out, _ = self.model(xb)
+            if is_tft:
+                out = out[:, :, 1]   # median
+            preds.append(out.cpu().numpy())
+            actuals.append(yb.numpy())
+
+        preds   = np.concatenate(preds,   axis=0)   # (N, H)
+        actuals = np.concatenate(actuals, axis=0)   # (N, H)
+
+        flat_p = preds.flatten()
+        flat_a = actuals.flatten()
+        mse    = mean_squared_error(flat_a, flat_p)
+        mae    = mean_absolute_error(flat_a, flat_p)
+        r2     = r2_score(flat_a, flat_p)
+        mape   = float(np.mean(np.abs((flat_a - flat_p) / (np.abs(flat_a) + 1e-8)))) * 100
+        da     = directional_accuracy(flat_p, flat_a)
