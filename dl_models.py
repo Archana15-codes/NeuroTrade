@@ -671,3 +671,30 @@ class DLTrainer:
             "attention": attn if return_attention else None,
             "dates":     fut_dates,
         }
+
+    def load(self, path: str, n_features: int,
+             model_type: Optional[ModelType] = None) -> None:
+        """Load a previously saved model."""
+        if not _TORCH:
+            raise ImportError("PyTorch required")
+        if model_type is None:
+            model_type = self.model_type or ModelType.LSTM
+        self.model_type = model_type
+        self.model = self._build_model(model_type, n_features).to(DEVICE)
+        state = torch.load(path, map_location=DEVICE)
+        self.model.load_state_dict(state)
+        self.model.eval()
+        print(f"[load] {model_type.value} loaded from {path}")
+
+    # private helpers 
+
+    def _build_model(self, model_type: ModelType, n_features: int) -> "nn.Module":
+        cfg = self.cfg
+        if model_type == ModelType.LSTM:
+            return LSTMAttention(n_features, cfg)
+        elif model_type == ModelType.TCN:
+            return TCNModel(n_features, cfg)
+        elif model_type == ModelType.TFT:
+            return TFTModel(n_features, cfg)
+        else:
+            raise ValueError(f"Unknown model type: {model_type}")
