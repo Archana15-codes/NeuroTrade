@@ -99,3 +99,20 @@ class DLFeatureEngineer:
         eng = DLFeatureEngineer(cfg)
         X, y, scaler = eng.build(df)
     """
+    def __init__(self, cfg: DLConfig = None):
+        self.cfg    = cfg or DLConfig()
+        self.scaler: Optional[RobustScaler] = None
+        self.feature_cols: List[str] = []
+        self.target_idx:   int = 0        # index of target col in feature matrix
+
+    # public 
+
+    def build(self, df: pd.DataFrame,
+              fit_scaler: bool = True) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+        """
+        Returns
+        -------
+        X : (n_samples, seq_len, n_features)
+        y : (n_samples, forecast_horizon)
+        cols : list of feature column names
+        """
