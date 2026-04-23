@@ -325,3 +325,20 @@ class TCNModel(nn.Module if _TORCH else object):
     Receptive field = 1 + 2 * (kernel-1) * (2^n_layers - 1)
     For kernel=3, 5 dilations: RF = 97 bars  ✓
     """
+    def __init__(self, n_features: int, cfg: DLConfig):
+        super().__init__()
+        self.cfg = cfg
+
+        # build channel list: input → each TCN level
+        channels  = cfg.tcn_channels
+        dilations = cfg.tcn_dilations
+        kernel    = cfg.tcn_kernel
+
+        layers = []
+        in_ch  = n_features
+        for i, (out_ch, dil) in enumerate(zip(channels, dilations)):
+            layers.append(_TCNBlock(in_ch, out_ch, kernel, dil, cfg.dropout))
+            in_ch = out_ch
+        # additional dilated layers if more dilations than channels
+        for dil in dilations[len(channels):]:
+            layers.append(_TCNBlock(in_ch, in_ch, kernel, dil, cfg.dropout))
