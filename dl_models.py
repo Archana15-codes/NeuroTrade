@@ -449,3 +449,18 @@ class TFTModel(nn.Module if _TORCH else object):
         )
         self.nq = nq
         self.H  = H
+
+    def forward(self, x: "torch.Tensor") -> Tuple["torch.Tensor", "torch.Tensor"]:
+        vsn_out, vsn_w = self.vsn(x)              # (B, T, d), (B, T, F)
+        lstm_out, _    = self.lstm_enc(vsn_out)   # (B, T, d)
+        gated  = self.gate_enc(lstm_out)
+        enc    = self.norm_enc(lstm_out * gated + vsn_out)
+
+        attn_out = self.attn(enc)                 # (B, T, d)
+        grn_out  = self.grn_post(attn_out)
+        out      = self.norm_post(grn_out + enc)  # (B, T, d)
+
+        context  = out.mean(dim=1)                # (B, d)  — global mean pool
+        preds    = self.head(context)             # (B, H * nq)
+        preds    = preds.view(-1, self.H, self.nq)  # (B, H, nq)
+        return preds, vsn_w                        # (B, H, nq), (B, T, F)
