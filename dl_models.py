@@ -390,3 +390,31 @@ class _VSN(nn.Module if _TORCH else object):
         self.select_grn   = _GRN(n_features, n_features, dropout)
 
     def forward(self, x: "torch.Tensor") -> Tuple["torch.Tensor", "torch.Tensor"]:
+        # x: (B, T, F)
+        B, T, F = x.shape
+        feat_tensors = [self.feature_grns[i](x[..., i:i+1]) for i in range(F)]
+        feat_stack   = torch.stack(feat_tensors, dim=-2)  # (B, T, F, d)
+        weights      = F.softmax(
+            self.select_grn(x.reshape(B * T, F)).reshape(B, T, F), dim=-1
+        )                                                  # (B, T, F)
+        out = (feat_stack * weights.unsqueeze(-1)).sum(dim=-2)  # (B, T, d)
+        return out, weights
+
+
+class TFTModel(nn.Module if _TORCH else object):
+    """
+    Simplified Temporal Fusion Transformer (Bryan Lim et al., 2021).
+
+    Architecture
+    ────────────
+    Input (B, T, F)
+    │
+    ├─ Variable Selection Network (VSN)    →  (B, T, d_model)
+    ├─ LSTM encoder                        →  (B, T, d_model)
+    ├─ Gated Add & Norm                    →  (B, T, d_model)
+    ├─ Multi-Head Self-Attention + GRN     →  (B, T, d_model)
+    ├─ Gated Add & Norm                    →  (B, T, d_model)
+    ├─ Position-wise Feed-Forward + GRN
+    ├─ Pool last H positions or global
+    └─ Quantile output head (3 quantiles)  →  (B, H, 3)  or point (B, H)
+    """
